@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workday HRM Tutorials — SharTech.ai</title>
+<meta name="description" content="Animated step-by-step Workday HRM tutorials. One new feature walkthrough every day.">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --border: #2a2a35;
+    --wd-orange: #f38b00;
+    --wd-blue: #0875e1;
+    --text: #e8e8f0;
+    --muted: #7a7a8c;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 70% 50% at 10% 0%, rgba(243,139,0,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 40% at 90% 90%, rgba(8,117,225,0.06) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  header {
+    padding: 48px 40px 36px;
+    max-width: 1200px;
+    margin: 0 auto;
+    position: relative;
+  }
+
+  .back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    margin-bottom: 28px;
+    transition: color 0.2s;
+  }
+  .back-link:hover { color: var(--text); }
+
+  .header-inner {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .logo { display: flex; align-items: center; gap: 14px; }
+
+  .logo-icon {
+    width: 48px; height: 48px;
+    background: linear-gradient(135deg, var(--wd-orange), var(--wd-blue));
+    border-radius: 14px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.5rem;
+  }
+
+  h1 { font-size: 1.8rem; font-weight: 700; letter-spacing: -0.5px; }
+  .tagline { color: var(--muted); font-size: 0.85rem; margin-top: 2px; }
+
+  .count-badge {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 6px 16px;
+    font-size: 0.82rem;
+    color: var(--muted);
+  }
+  .count-badge span { color: var(--wd-orange); font-weight: 700; }
+
+  .grid-section {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 40px 80px;
+    position: relative;
+  }
+
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .card:hover {
+    border-color: rgba(243,139,0,0.35);
+    transform: translateY(-3px);
+    box-shadow: 0 12px 32px rgba(0,0,0,0.4);
+  }
+
+  .card-preview {
+    width: 100%;
+    aspect-ratio: 16 / 10;
+    background: var(--surface2);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .card-preview-inner {
+    width: 90%; height: 90%;
+    background: #f2f4f7;
+    border-radius: 6px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  }
+
+  .mock-topbar {
+    height: 28px;
+    background: #152935;
+    display: flex;
+    align-items: center;
+    padding: 0 10px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+
+  .mock-topbar .wd-logo {
+    width: 18px; height: 18px;
+    background: #f38b00;
+    border-radius: 3px;
+  }
+
+  .mock-topbar .mock-nav {
+    display: flex; gap: 5px;
+  }
+
+  .mock-topbar .mock-nav span {
+    width: 28px; height: 6px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+  }
+
+  .mock-body {
+    flex: 1;
+    background: #f2f4f7;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  .mock-title-bar {
+    height: 8px; width: 60%;
+    background: #152935;
+    border-radius: 2px;
+  }
+
+  .mock-rows {
+    display: flex; flex-direction: column; gap: 4px; flex: 1;
+  }
+
+  .mock-row {
+    height: 7px;
+    background: #dadde2;
+    border-radius: 2px;
+  }
+
+  .mock-row.short { width: 45%; }
+  .mock-row.medium { width: 70%; }
+  .mock-row.full { width: 100%; }
+
+  .mock-btn {
+    align-self: flex-start;
+    margin-top: auto;
+    height: 14px; width: 52px;
+    background: #0875e1;
+    border-radius: 3px;
+  }
+
+  .play-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.2s;
+    background: rgba(0,0,0,0.3);
+  }
+
+  .card:hover .play-overlay { opacity: 1; }
+
+  .play-btn {
+    width: 44px; height: 44px;
+    background: var(--wd-orange);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(243,139,0,0.5);
+  }
+
+  .play-btn svg { margin-left: 3px; }
+
+  .card-body { padding: 18px 20px 20px; flex: 1; display: flex; flex-direction: column; }
+
+  .card-meta {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  }
+
+  .card-date {
+    font-size: 11px; color: var(--muted);
+    font-variant-numeric: tabular-nums;
+  }
+
+  .card-tag {
+    font-size: 10px; font-weight: 700;
+    background: rgba(243,139,0,0.12);
+    color: var(--wd-orange);
+    border: 1px solid rgba(243,139,0,0.2);
+    padding: 2px 7px; border-radius: 4px;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
+  .card-title { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+
+  .card-desc {
+    font-size: 13px; color: var(--muted); line-height: 1.5; flex: 1;
+  }
+
+  .card-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-top: 14px; padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .card-steps {
+    font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 5px;
+  }
+
+  .card-steps svg { opacity: 0.5; }
+
+  .card-arrow {
+    font-size: 16px; color: var(--muted);
+    transition: color 0.2s, transform 0.2s;
+  }
+
+  .card:hover .card-arrow { color: var(--wd-orange); transform: translateX(3px); }
+
+  /* empty state */
+  .empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 80px 20px;
+    color: var(--muted);
+  }
+
+  .empty h3 { font-size: 18px; margin-bottom: 8px; color: var(--text); }
+
+  @media (max-width: 600px) {
+    header, .grid-section { padding-left: 20px; padding-right: 20px; }
+    h1 { font-size: 1.4rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <a href="https://www.shartech.ai" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+    SharTech.ai
+  </a>
+  <div class="header-inner">
+    <div class="logo">
+      <div class="logo-icon">📋</div>
+      <div>
+        <h1>Workday Tutorials</h1>
+        <p class="tagline">Animated step-by-step Workday HRM walkthroughs · New feature daily</p>
+      </div>
+    </div>
+    <div class="count-badge"><span id="count">1</span> tutorial published</div>
+  </div>
+</header>
+
+<div class="grid-section">
+  <div class="grid" id="grid">
+
+    <a href="2026-04-24-request-time-off/tutorial.html" class="card">
+      <div class="card-preview">
+        <div class="card-preview-inner">
+          <div class="mock-topbar">
+            <div class="wd-logo"></div>
+            <div class="mock-nav">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+          <div class="mock-body">
+            <div class="mock-title-bar"></div>
+            <div class="mock-rows">
+              <div class="mock-row full"></div>
+              <div class="mock-row medium"></div>
+              <div class="mock-row short"></div>
+              <div class="mock-row full"></div>
+              <div class="mock-row medium"></div>
+            </div>
+            <div class="mock-btn"></div>
+          </div>
+        </div>
+        <div class="play-overlay">
+          <div class="play-btn">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M5 3l14 9-14 9V3z"/></svg>
+          </div>
+        </div>
+      </div>
+      <div class="card-body">
+        <div class="card-meta">
+          <span class="card-date">Apr 24, 2026</span>
+          <span class="card-tag">Absence</span>
+        </div>
+        <div class="card-title">Request Time Off</div>
+        <div class="card-desc">Navigate the Manage Absence calendar to submit a time-off request — from selecting dates to final confirmation.</div>
+        <div class="card-footer">
+          <div class="card-steps">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            7 steps · ~35 sec
+          </div>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<script>
+  const count = document.querySelectorAll('.card').length;
+  document.getElementById('count').textContent = count;
+  const label = document.querySelector('.count-badge');
+  label.innerHTML = `<span>${count}</span> tutorial${count !== 1 ? 's' : ''} published`;
+</script>
+</body>
+</html>

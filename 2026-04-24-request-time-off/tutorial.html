@@ -1,0 +1,818 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Workday HRM Tutorial — Request Time Off (2026-04-24)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --wd-orange: #f38b00;
+    --wd-blue:   #0875e1;
+    --wd-navy:   #152935;
+    --wd-bg:     #f2f4f7;
+    --wd-line:   #dadde2;
+    --wd-text:   #25313d;
+    --wd-muted:  #6b7684;
+    --wd-green:  #2e8540;
+    --wd-red:    #c0392b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--wd-text); background: #101418; }
+  header.page {
+    padding: 18px 24px; background: #0b0f13; color: #fff;
+    border-bottom: 1px solid #1d242c;
+  }
+  header.page h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  header.page p { margin: 0; font-size: 13px; color: #9aa6b2; }
+  header.page .badge {
+    display: inline-block; background: var(--wd-orange); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 8px; letter-spacing: 0.4px;
+  }
+
+  .stage-wrap {
+    max-width: 1100px; margin: 20px auto; padding: 0 16px;
+  }
+  .controls {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #cdd4dc; font-size: 13px;
+  }
+  .controls button {
+    background: var(--wd-blue); color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.secondary { background: #334352; }
+  .step-label { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    background: var(--wd-bg); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    border: 1px solid #1d242c;
+  }
+  .screen {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity 420ms ease;
+  }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  /* ------- Workday chrome ------- */
+  .wd-topbar {
+    height: 48px; background: var(--wd-navy); color: #fff;
+    display: flex; align-items: center; padding: 0 14px; gap: 14px;
+    font-size: 13px;
+  }
+  .wd-topbar .menu-icon {
+    width: 22px; height: 16px; display: inline-flex; flex-direction: column; justify-content: space-between;
+  }
+  .wd-topbar .menu-icon span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+  .wd-topbar .logo { font-weight: 700; letter-spacing: 0.5px; color: var(--wd-orange); }
+  .wd-topbar .search {
+    flex: 1; max-width: 420px; background: #24333f; border-radius: 3px; padding: 6px 10px; color: #aeb8c3; font-size: 12px;
+  }
+  .wd-topbar .right { margin-left: auto; display: flex; gap: 12px; align-items: center; color: #c8d2dc; }
+  .wd-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#ffb46b,#f38b00);
+    display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700;
+  }
+
+  .wd-body { position: absolute; top: 48px; bottom: 0; left: 0; right: 0; }
+
+  /* ------- Home dashboard ------- */
+  .dashboard {
+    padding: 24px 28px; background: linear-gradient(#f7f9fc, #eef2f7); height: 100%;
+  }
+  .dash-hello { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .dash-sub { color: var(--wd-muted); font-size: 13px; margin: 0 0 22px; }
+  .apps-grid {
+    display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px;
+  }
+  .app-tile {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 10px; text-align: center; font-size: 12px; color: var(--wd-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+  .app-tile .icon {
+    width: 34px; height: 34px; border-radius: 8px; margin: 0 auto 8px;
+    display: grid; place-items: center; color: #fff; font-size: 16px; font-weight: 700;
+  }
+  .ic-absence   { background: #2a8fbd; }
+  .ic-pay       { background: #6a4fb6; }
+  .ic-time      { background: #2e8540; }
+  .ic-benefits  { background: #b65c24; }
+  .ic-learning  { background: #0875e1; }
+  .ic-career    { background: #c23878; }
+
+  /* ------- Side menu ------- */
+  .side-menu {
+    position: absolute; top: 0; bottom: 0; left: 0; width: 280px;
+    background: #fff; border-right: 1px solid var(--wd-line);
+    transform: translateX(-105%); transition: transform 380ms ease;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.12);
+    padding: 16px 0; z-index: 5;
+  }
+  .screen.active .side-menu.open { transform: translateX(0); }
+  .side-menu h3 {
+    margin: 0; padding: 0 18px 10px; font-size: 11px; letter-spacing: 0.8px;
+    color: var(--wd-muted); text-transform: uppercase; font-weight: 600;
+  }
+  .menu-item {
+    padding: 9px 18px; font-size: 13px; display: flex; align-items: center; gap: 10px; cursor: pointer;
+  }
+  .menu-item .dot { width: 22px; height: 22px; border-radius: 5px; display: inline-block; }
+  .menu-item.hl { background: #eaf4ff; color: var(--wd-blue); font-weight: 600; }
+
+  /* ------- Absence calendar ------- */
+  .absence {
+    display: grid; grid-template-columns: 1fr 260px; height: 100%;
+  }
+  .cal-wrap { padding: 16px 20px; overflow: hidden; background: #fff; }
+  .cal-head {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px;
+  }
+  .cal-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+  .cal-head .nav-arrow { color: var(--wd-blue); font-weight: 700; cursor: pointer; font-size: 14px; padding: 2px 6px; }
+  .cal-head .view-toggle {
+    margin-left: auto; border: 1px solid var(--wd-line); border-radius: 3px; overflow: hidden;
+    font-size: 11px;
+  }
+  .cal-head .view-toggle span {
+    display: inline-block; padding: 4px 10px; background: #fff;
+  }
+  .cal-head .view-toggle span.on { background: var(--wd-navy); color: #fff; }
+
+  .cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); border-top: 1px solid var(--wd-line); border-left: 1px solid var(--wd-line);
+  }
+  .cal-grid .dow, .cal-grid .cell {
+    border-right: 1px solid var(--wd-line); border-bottom: 1px solid var(--wd-line);
+    min-height: 52px; padding: 4px 6px; font-size: 11px; color: var(--wd-text); background: #fff;
+    position: relative;
+  }
+  .cal-grid .dow {
+    min-height: auto; padding: 6px; font-weight: 600; color: var(--wd-muted); background: #fafbfc; text-align: center; font-size: 10px; letter-spacing: 0.5px;
+  }
+  .cal-grid .cell.off { color: #c1c8d0; background: #fafbfc; }
+  .cal-grid .cell .num { font-weight: 600; }
+  .cal-grid .cell.selected {
+    background: #d9ecff; box-shadow: inset 0 0 0 2px var(--wd-blue);
+  }
+  .cal-grid .cell.holiday::after {
+    content: ""; position: absolute; left: 6px; right: 6px; bottom: 6px; height: 4px; border-radius: 2px; background: #f4c037;
+  }
+
+  .cal-footer {
+    margin-top: 12px; display: flex; align-items: center; gap: 10px;
+  }
+  .btn-primary {
+    background: var(--wd-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 3px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .btn-ghost {
+    background: #fff; color: var(--wd-blue); border: 1px solid var(--wd-blue);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  .balances {
+    background: #fafbfc; border-left: 1px solid var(--wd-line); padding: 16px; font-size: 12px;
+  }
+  .balances h3 {
+    margin: 0 0 10px; font-size: 12px; color: var(--wd-muted);
+    text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600;
+  }
+  .bal-row {
+    display: flex; justify-content: space-between; padding: 8px 0;
+    border-bottom: 1px dashed var(--wd-line);
+  }
+  .bal-row .label { color: var(--wd-text); }
+  .bal-row .val { font-weight: 600; }
+  .bal-row .val.ok { color: var(--wd-green); }
+
+  /* ------- Modal ------- */
+  .modal-overlay {
+    position: absolute; inset: 0; background: rgba(14,20,28,0.45);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 320ms ease; pointer-events: none;
+  }
+  .screen.active .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: #fff; border-radius: 6px; width: 560px; max-width: 92%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35); overflow: hidden;
+    transform: translateY(10px); transition: transform 320ms ease;
+  }
+  .screen.active .modal-overlay.show .modal { transform: translateY(0); }
+  .modal-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--wd-line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .modal-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .modal-head .close { margin-left: auto; color: var(--wd-muted); cursor: pointer; font-size: 18px; }
+  .modal-body { padding: 16px 18px; font-size: 13px; }
+  .modal-footer { padding: 12px 18px; border-top: 1px solid var(--wd-line); display: flex; gap: 8px; justify-content: flex-end; background: #fafbfc; }
+
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11px; color: var(--wd-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field .input, .field .select {
+    width: 100%; border: 1px solid var(--wd-line); border-radius: 3px; padding: 8px 10px;
+    font-size: 13px; background: #fff; display: flex; align-items: center; justify-content: space-between;
+  }
+  .field .select .caret { color: var(--wd-muted); }
+  .field .input.focus { border-color: var(--wd-blue); box-shadow: 0 0 0 2px rgba(8,117,225,0.12); }
+
+  .dropdown-list {
+    margin-top: 2px; border: 1px solid var(--wd-line); border-radius: 3px; background: #fff;
+    max-height: 0; overflow: hidden; transition: max-height 320ms ease;
+  }
+  .dropdown-list.open { max-height: 160px; }
+  .dropdown-list .item { padding: 7px 10px; font-size: 13px; border-bottom: 1px solid #f0f2f5; }
+  .dropdown-list .item:hover, .dropdown-list .item.sel { background: #eaf4ff; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .summary-row {
+    display: flex; justify-content: space-between; font-size: 12px;
+    padding: 6px 0; border-bottom: 1px dashed var(--wd-line);
+  }
+  .summary-row .k { color: var(--wd-muted); }
+
+  /* ------- Success toast / confirmation ------- */
+  .confirm-screen {
+    padding: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; background: #fff; height: 100%;
+  }
+  .check {
+    width: 78px; height: 78px; border-radius: 50%; background: var(--wd-green);
+    color: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(46,133,64,0.3);
+    animation: pop 600ms ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .confirm-screen h2 { margin: 18px 0 6px; font-size: 22px; }
+  .confirm-screen p  { margin: 0; color: var(--wd-muted); font-size: 13px; }
+  .receipt {
+    margin-top: 22px; background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 18px; min-width: 360px; text-align: left;
+  }
+  .receipt .summary-row:last-child { border-bottom: none; }
+
+  /* ------- Animated cursor ------- */
+  .cursor {
+    position: absolute; width: 22px; height: 22px; z-index: 50;
+    left: -40px; top: -40px;
+    pointer-events: none;
+    transition: left 700ms cubic-bezier(0.22, 0.61, 0.36, 1), top 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  .cursor.click::after {
+    content: ""; position: absolute; left: 2px; top: 2px; width: 22px; height: 22px;
+    border-radius: 50%; border: 2px solid rgba(8,117,225,0.6);
+    animation: ring 500ms ease-out;
+  }
+  @keyframes ring {
+    0%   { transform: scale(0.4); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ------- Step narration ------- */
+  .narration {
+    position: absolute; left: 16px; bottom: 16px; right: 16px;
+    background: rgba(21,41,53,0.94); color: #fff; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; line-height: 1.4;
+    display: flex; align-items: flex-start; gap: 10px;
+    border-left: 4px solid var(--wd-orange);
+  }
+  .narration .n {
+    background: var(--wd-orange); color: #fff; font-weight: 700; font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+
+  footer.page {
+    max-width: 1100px; margin: 14px auto 40px; padding: 0 16px;
+    color: #8b97a3; font-size: 12px; line-height: 1.5;
+  }
+  footer.page a { color: #9ec3ea; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1><span class="badge">Workday HRM</span> Request Time Off — Animated Walkthrough</h1>
+  <p>Daily tutorial · 2026-04-24 · Based on public Workday documentation and partner-published job aids.</p>
+</header>
+
+<div class="stage-wrap">
+  <div class="controls">
+    <button id="playBtn">Pause</button>
+    <button class="secondary" id="restartBtn">Restart</button>
+    <button class="secondary" id="prevBtn">&lsaquo; Prev</button>
+    <button class="secondary" id="nextBtn">Next &rsaquo;</button>
+    <div class="step-label" id="stepLabel">Step 1 / 7</div>
+  </div>
+
+  <div class="stage" id="stage">
+
+    <!-- Cursor overlay, shared across screens -->
+    <div class="cursor" id="cursor">
+      <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2 L2 18 L7 14 L10 20 L13 19 L10 13 L17 13 Z" fill="#ffffff" stroke="#152935" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- ============ STEP 1 — HOME DASHBOARD ============ -->
+    <div class="screen" data-step="1">
+      <div class="wd-topbar">
+        <div class="menu-icon" id="menuIcon1"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right">
+          <span>Inbox</span><span>Notifications</span>
+          <div class="wd-avatar">AS</div>
+        </div>
+      </div>
+      <div class="wd-body">
+        <div class="dashboard">
+          <h2 class="dash-hello">Good morning, Alex</h2>
+          <p class="dash-sub">Friday, April 24, 2026 · Your Workday home</p>
+          <div class="apps-grid">
+            <div class="app-tile"><div class="icon ic-absence">A</div>Absence</div>
+            <div class="app-tile"><div class="icon ic-pay">P</div>Pay</div>
+            <div class="app-tile"><div class="icon ic-time">T</div>Time</div>
+            <div class="app-tile"><div class="icon ic-benefits">B</div>Benefits</div>
+            <div class="app-tile"><div class="icon ic-learning">L</div>Learning</div>
+            <div class="app-tile"><div class="icon ic-career">C</div>Career</div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">1</span>
+        From your Workday home, click the <strong>Menu</strong> icon in the top-left to open the global navigation.
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 — MENU OPEN ============ -->
+    <div class="screen" data-step="2">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">AS</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="dashboard">
+          <h2 class="dash-hello">Good morning, Alex</h2>
+          <p class="dash-sub">Friday, April 24, 2026 · Your Workday home</p>
+          <div class="apps-grid" style="opacity:0.5;">
+            <div class="app-tile"><div class="icon ic-absence">A</div>Absence</div>
+            <div class="app-tile"><div class="icon ic-pay">P</div>Pay</div>
+            <div class="app-tile"><div class="icon ic-time">T</div>Time</div>
+            <div class="app-tile"><div class="icon ic-benefits">B</div>Benefits</div>
+            <div class="app-tile"><div class="icon ic-learning">L</div>Learning</div>
+            <div class="app-tile"><div class="icon ic-career">C</div>Career</div>
+          </div>
+        </div>
+        <div class="side-menu open">
+          <h3>Apps</h3>
+          <div class="menu-item hl" id="menuAbsence"><span class="dot" style="background:#2a8fbd;"></span>Absence</div>
+          <div class="menu-item"><span class="dot" style="background:#6a4fb6;"></span>Pay</div>
+          <div class="menu-item"><span class="dot" style="background:#2e8540;"></span>Time</div>
+          <div class="menu-item"><span class="dot" style="background:#b65c24;"></span>Benefits</div>
+          <div class="menu-item"><span class="dot" style="background:#0875e1;"></span>Learning</div>
+          <div class="menu-item"><span class="dot" style="background:#c23878;"></span>Career</div>
+          <div class="menu-item"><span class="dot" style="background:#8a99a8;"></span>Directory</div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">2</span>
+        Select <strong>Absence</strong> (a.k.a. <em>Manage Absence</em>) from the Apps menu to open the absence calendar.
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 — ABSENCE CALENDAR: SELECT DATES ============ -->
+    <div class="screen" data-step="3">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">AS</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="absence">
+          <div class="cal-wrap">
+            <div class="cal-head">
+              <span class="nav-arrow">&lsaquo;</span>
+              <h2>April 2026</h2>
+              <span class="nav-arrow">&rsaquo;</span>
+              <div class="view-toggle">
+                <span>Day</span><span>Week</span><span class="on">Month</span>
+              </div>
+            </div>
+            <div class="cal-grid" id="calGrid3">
+              <div class="dow">SUN</div><div class="dow">MON</div><div class="dow">TUE</div><div class="dow">WED</div><div class="dow">THU</div><div class="dow">FRI</div><div class="dow">SAT</div>
+              <!-- cells filled by JS for days -->
+            </div>
+            <div class="cal-footer">
+              <button class="btn-primary" id="reqBtn3">0 Days – Request Absence</button>
+              <button class="btn-ghost">Correct Absence</button>
+            </div>
+          </div>
+          <div class="balances">
+            <h3>Balances as of Today</h3>
+            <div class="bal-row"><span class="label">Vacation</span><span class="val ok">14.00 Days</span></div>
+            <div class="bal-row"><span class="label">Sick</span><span class="val ok">8.00 Days</span></div>
+            <div class="bal-row"><span class="label">Personal</span><span class="val">2.00 Days</span></div>
+            <div class="bal-row"><span class="label">Floating Holiday</span><span class="val">1.00 Day</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">3</span>
+        In the <strong>Manage Absence</strong> calendar, click one or more days (or click-drag to select a range). Selected days highlight in blue.
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — REQUEST BUTTON ARMED ============ -->
+    <div class="screen" data-step="4">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">AS</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="absence">
+          <div class="cal-wrap">
+            <div class="cal-head">
+              <span class="nav-arrow">&lsaquo;</span>
+              <h2>April 2026</h2>
+              <span class="nav-arrow">&rsaquo;</span>
+              <div class="view-toggle">
+                <span>Day</span><span>Week</span><span class="on">Month</span>
+              </div>
+            </div>
+            <div class="cal-grid" id="calGrid4"></div>
+            <div class="cal-footer">
+              <button class="btn-primary" id="reqBtn4">3 Days – Request Absence</button>
+              <button class="btn-ghost">Correct Absence</button>
+            </div>
+          </div>
+          <div class="balances">
+            <h3>Balances as of Today</h3>
+            <div class="bal-row"><span class="label">Vacation</span><span class="val ok">14.00 Days</span></div>
+            <div class="bal-row"><span class="label">Sick</span><span class="val ok">8.00 Days</span></div>
+            <div class="bal-row"><span class="label">Personal</span><span class="val">2.00 Days</span></div>
+            <div class="bal-row"><span class="label">Selected</span><span class="val ok">3.00 Days</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">4</span>
+        Click <strong>“3 Days – Request Absence”</strong> at the bottom-left. The count updates automatically based on your selection.
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — TYPE OF ABSENCE MODAL ============ -->
+    <div class="screen" data-step="5">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">AS</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="absence" style="opacity:0.45;">
+          <div class="cal-wrap">
+            <div class="cal-head"><h2>April 2026</h2></div>
+            <div class="cal-grid" id="calGrid5"></div>
+          </div>
+          <div class="balances"></div>
+        </div>
+
+        <div class="modal-overlay show">
+          <div class="modal">
+            <div class="modal-head">
+              <h3>Request Absence</h3>
+              <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+              <div class="field">
+                <label>When</label>
+                <div class="input">Apr 27, 2026 – Apr 29, 2026 (3 days)</div>
+              </div>
+              <div class="field">
+                <label>Type</label>
+                <div class="select" id="typeSelect">
+                  <span>Select Absence Type</span>
+                  <span class="caret">▾</span>
+                </div>
+                <div class="dropdown-list open" id="typeList">
+                  <div class="item sel">Time Off › Vacation</div>
+                  <div class="item">Time Off › Sick</div>
+                  <div class="item">Time Off › Personal Day</div>
+                  <div class="item">Time Off › Floating Holiday</div>
+                  <div class="item">Leave of Absence › Parental</div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost">Cancel</button>
+              <button class="btn-primary" id="nextBtn5">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">5</span>
+        Pick the <strong>Type of Absence</strong>. Both <em>Time Off</em> and <em>Leave of Absence</em> types appear in the same list.
+      </div>
+    </div>
+
+    <!-- ============ STEP 6 — DETAILS & SUBMIT ============ -->
+    <div class="screen" data-step="6">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">AS</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="absence" style="opacity:0.35;">
+          <div class="cal-wrap"><div class="cal-grid" id="calGrid6"></div></div>
+          <div class="balances"></div>
+        </div>
+        <div class="modal-overlay show">
+          <div class="modal" style="width:620px;">
+            <div class="modal-head">
+              <h3>Request Absence — Details</h3>
+              <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+              <div class="two-col">
+                <div class="field">
+                  <label>Type</label>
+                  <div class="input">Time Off › Vacation</div>
+                </div>
+                <div class="field">
+                  <label>Hours (Daily)</label>
+                  <div class="input">8.00</div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Reason</label>
+                <div class="select"><span>Vacation – Planned</span><span class="caret">▾</span></div>
+              </div>
+              <div class="field">
+                <label>Comment to Approver</label>
+                <div class="input" style="min-height:44px;">Family trip; coverage arranged with Priya on Monday.</div>
+              </div>
+              <div style="margin-top:10px; padding:10px 12px; background:#fafbfc; border:1px solid var(--wd-line); border-radius:4px;">
+                <div class="summary-row"><span class="k">Total Request</span><span>24.00 Hours (3 Days)</span></div>
+                <div class="summary-row"><span class="k">Balance After Request</span><span>11.00 Days</span></div>
+                <div class="summary-row" style="border-bottom:none;"><span class="k">Approver</span><span>Morgan Lee (Manager)</span></div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost">Save for Later</button>
+              <button class="btn-primary" id="submitBtn6">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">6</span>
+        Review <strong>Hours (Daily)</strong>, add a <strong>Reason</strong> and an optional <strong>Comment to Approver</strong>, then click <strong>Submit</strong>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 7 — CONFIRMATION ============ -->
+    <div class="screen" data-step="7">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">AS</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="confirm-screen">
+          <div class="check">✓</div>
+          <h2>You've submitted</h2>
+          <p>Routed to <strong>Morgan Lee</strong> for approval. You'll see the result in your <strong>Inbox</strong>.</p>
+          <div class="receipt">
+            <div class="summary-row"><span class="k">Type</span><span>Time Off › Vacation</span></div>
+            <div class="summary-row"><span class="k">Dates</span><span>Apr 27–29, 2026</span></div>
+            <div class="summary-row"><span class="k">Hours</span><span>24.00 (3 days)</span></div>
+            <div class="summary-row"><span class="k">Status</span><span style="color:var(--wd-blue);">In Progress — Awaiting Approval</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">7</span>
+        Your request is in flight. While it's <em>Pending</em> you can cancel it from <strong>Manage Absence</strong>; once approved, use <strong>Correct Absence</strong> to change it.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  <p>
+    This walkthrough is a teaching mockup based on publicly available Workday documentation and partner job aids.
+    Exact labels in your tenant may vary slightly by configuration.
+    Sources:
+    <a href="https://www.workday.com/en-us/products/workforce-management/absence.html">Workday Absence Management</a>,
+    <a href="https://hr.uw.edu/time-absence/your-time-and-absence/manage/">UW HR — Manage your absence</a>,
+    <a href="https://coreteamgroup.com/new-workday-absence-calendar-step-by-step-guide/">Coreteam — New Workday Absence Calendar Guide</a>.
+  </p>
+</footer>
+
+<script>
+  // ---------- Build calendars for April 2026 ----------
+  // April 1, 2026 is a Wednesday. Selected days: Mon Apr 27, Tue Apr 28, Wed Apr 29.
+  const HOLIDAYS = new Set([3 /* example holiday markers */]);
+
+  function buildCalendar(targetId, selected /* array of days */ ) {
+    const grid = document.getElementById(targetId);
+    if (!grid) return;
+    // Leading blanks (Apr 1 2026 = Wed => index 3 for Sun-first week)
+    const leading = 3;
+    const daysInMonth = 30;
+    const trailing = 7 - ((leading + daysInMonth) % 7);
+    let html = '';
+    for (let i = 0; i < leading; i++) {
+      const day = 31 - (leading - 1 - i); // Mar dates
+      html += `<div class="cell off"><span class="num">${day}</span></div>`;
+    }
+    for (let d = 1; d <= daysInMonth; d++) {
+      const sel = selected && selected.includes(d) ? ' selected' : '';
+      const hol = HOLIDAYS.has(d) ? ' holiday' : '';
+      html += `<div class="cell${sel}${hol}"><span class="num">${d}</span></div>`;
+    }
+    for (let i = 1; i <= (trailing === 7 ? 0 : trailing); i++) {
+      html += `<div class="cell off"><span class="num">${i}</span></div>`;
+    }
+    grid.innerHTML = html;
+  }
+
+  buildCalendar('calGrid3', []);
+  buildCalendar('calGrid4', [27, 28, 29]);
+  buildCalendar('calGrid5', [27, 28, 29]);
+  buildCalendar('calGrid6', [27, 28, 29]);
+
+  // ---------- Screen orchestration ----------
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const TOTAL = screens.length;
+  const stepLabel = document.getElementById('stepLabel');
+  const cursor = document.getElementById('cursor');
+  const playBtn = document.getElementById('playBtn');
+
+  let current = 0;
+  let playing = true;
+  let timer = null;
+  let cursorTimers = [];
+
+  // Duration per step in ms
+  const DURATIONS = [3800, 3400, 4200, 3600, 4400, 4800, 5200];
+
+  function clearCursorTimers() {
+    cursorTimers.forEach(t => clearTimeout(t));
+    cursorTimers = [];
+  }
+
+  function moveCursorTo(x, y, clickAfter = true) {
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    if (clickAfter) {
+      const t = setTimeout(() => {
+        cursor.classList.add('click');
+        const t2 = setTimeout(() => cursor.classList.remove('click'), 520);
+        cursorTimers.push(t2);
+      }, 720);
+      cursorTimers.push(t);
+    }
+  }
+
+  function offsetInStage(el) {
+    const stage = document.getElementById('stage');
+    const sr = stage.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return { x: er.left - sr.left + er.width / 2 - 11, y: er.top - sr.top + er.height / 2 - 11 };
+  }
+
+  function animateStep(i) {
+    clearCursorTimers();
+    cursor.style.left = '-40px';
+    cursor.style.top = '-40px';
+
+    const screen = screens[i];
+    // Small delay to let screen render
+    const t = setTimeout(() => {
+      switch (i) {
+        case 0: {
+          const el = screen.querySelector('#menuIcon1');
+          if (el) {
+            const p = offsetInStage(el);
+            moveCursorTo(p.x, p.y);
+          }
+          break;
+        }
+        case 1: {
+          const el = screen.querySelector('#menuAbsence');
+          if (el) {
+            const p = offsetInStage(el);
+            moveCursorTo(p.x, p.y);
+          }
+          break;
+        }
+        case 2: {
+          // hover a selected cell (even though none selected yet, hover Apr 27)
+          const cells = screen.querySelectorAll('.cell');
+          // Apr 27 -> index = leading (3) + 27 - 1 + dow(SUN..SAT)=7 = 3 + 26 + 7 = 36
+          const target = cells[36];
+          if (target) {
+            const p = offsetInStage(target);
+            moveCursorTo(p.x, p.y);
+          }
+          break;
+        }
+        case 3: {
+          const el = screen.querySelector('#reqBtn4');
+          if (el) {
+            const p = offsetInStage(el);
+            moveCursorTo(p.x, p.y);
+          }
+          break;
+        }
+        case 4: {
+          // point at first dropdown item then Next
+          const list = screen.querySelector('#typeList .item.sel');
+          if (list) {
+            const p = offsetInStage(list);
+            moveCursorTo(p.x, p.y);
+            const t2 = setTimeout(() => {
+              const nx = screen.querySelector('#nextBtn5');
+              if (nx) {
+                const q = offsetInStage(nx);
+                moveCursorTo(q.x, q.y);
+              }
+            }, 1800);
+            cursorTimers.push(t2);
+          }
+          break;
+        }
+        case 5: {
+          const el = screen.querySelector('#submitBtn6');
+          if (el) {
+            const p = offsetInStage(el);
+            moveCursorTo(p.x, p.y);
+          }
+          break;
+        }
+        case 6: {
+          // No cursor action on confirmation
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+      }
+    }, 250);
+    cursorTimers.push(t);
+  }
+
+  function showStep(i) {
+    current = ((i % TOTAL) + TOTAL) % TOTAL;
+    screens.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    stepLabel.textContent = `Step ${current + 1} / ${TOTAL}`;
+    animateStep(current);
+  }
+
+  function tick() {
+    if (!playing) return;
+    const dur = DURATIONS[current] || 4000;
+    timer = setTimeout(() => {
+      showStep(current + 1);
+      tick();
+    }, dur);
+  }
+
+  function stopTick() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  function togglePlay() {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    if (playing) tick();
+    else stopTick();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    stopTick(); showStep(0); if (playing) tick();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    stopTick(); showStep(current - 1); if (playing) tick();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    stopTick(); showStep(current + 1); if (playing) tick();
+  });
+
+  // Kick off
+  showStep(0);
+  tick();
+</script>
+
+</body>
+</html>
