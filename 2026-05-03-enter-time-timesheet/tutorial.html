@@ -1,0 +1,948 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Workday HRM Tutorial — Enter Time / Submit Timesheet (2026-05-03)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --wd-orange: #f38b00;
+    --wd-blue:   #0875e1;
+    --wd-navy:   #152935;
+    --wd-bg:     #f2f4f7;
+    --wd-line:   #dadde2;
+    --wd-text:   #25313d;
+    --wd-muted:  #6b7684;
+    --wd-green:  #2e8540;
+    --wd-amber:  #b8860b;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--wd-text); background: #101418; }
+  header.page {
+    padding: 18px 24px; background: #0b0f13; color: #fff;
+    border-bottom: 1px solid #1d242c;
+  }
+  header.page h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  header.page p { margin: 0; font-size: 13px; color: #9aa6b2; }
+  header.page .badge {
+    display: inline-block; background: var(--wd-orange); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 8px; letter-spacing: 0.4px;
+  }
+
+  .stage-wrap { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #cdd4dc; font-size: 13px;
+  }
+  .controls button {
+    background: var(--wd-blue); color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.secondary { background: #334352; }
+  .step-label { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    background: var(--wd-bg); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    border: 1px solid #1d242c;
+  }
+  .screen {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity 420ms ease;
+  }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  /* ---------- Workday chrome ---------- */
+  .wd-topbar {
+    height: 48px; background: var(--wd-navy); color: #fff;
+    display: flex; align-items: center; padding: 0 14px; gap: 14px;
+    font-size: 13px;
+  }
+  .wd-topbar .menu-icon {
+    width: 22px; height: 16px; display: inline-flex; flex-direction: column; justify-content: space-between;
+  }
+  .wd-topbar .menu-icon span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+  .wd-topbar .logo { font-weight: 700; letter-spacing: 0.5px; color: var(--wd-orange); }
+  .wd-topbar .search {
+    flex: 1; max-width: 420px; background: #24333f; border-radius: 3px; padding: 6px 10px; color: #aeb8c3; font-size: 12px;
+  }
+  .wd-topbar .right { margin-left: auto; display: flex; gap: 12px; align-items: center; color: #c8d2dc; }
+  .wd-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#ffb46b,#f38b00);
+    display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .wd-body { position: absolute; top: 48px; bottom: 0; left: 0; right: 0; }
+
+  /* ---------- Home dashboard ---------- */
+  .dashboard {
+    padding: 24px 28px; background: linear-gradient(#f7f9fc, #eef2f7); height: 100%;
+  }
+  .dash-hello { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .dash-sub { color: var(--wd-muted); font-size: 13px; margin: 0 0 22px; }
+  .apps-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .app-tile {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 10px; text-align: center; font-size: 12px; color: var(--wd-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); cursor: pointer;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .app-tile.hl { border-color: var(--wd-blue); box-shadow: 0 0 0 2px rgba(8,117,225,0.15); }
+  .app-tile .icon {
+    width: 34px; height: 34px; border-radius: 8px; margin: 0 auto 8px;
+    display: grid; place-items: center; color: #fff; font-size: 16px; font-weight: 700;
+  }
+  .ic-absence  { background: #2a8fbd; }
+  .ic-pay      { background: #6a4fb6; }
+  .ic-time     { background: #2e8540; }
+  .ic-benefits { background: #b65c24; }
+  .ic-learning { background: #0875e1; }
+  .ic-career   { background: #c23878; }
+
+  /* ---------- Time landing ---------- */
+  .time-landing {
+    padding: 22px 28px; background: #fff; height: 100%;
+  }
+  .page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .page-title h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .page-title .crumb { color: var(--wd-muted); font-size: 12px; }
+
+  .time-grid-wrap {
+    display: grid; grid-template-columns: 1fr 240px; gap: 18px; height: calc(100% - 50px);
+  }
+  .week-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px; overflow: hidden;
+    display: flex; flex-direction: column;
+  }
+  .week-head {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--wd-line); background: #fafbfc;
+  }
+  .week-head .nav-arrow { color: var(--wd-blue); font-weight: 700; cursor: pointer; padding: 2px 6px; }
+  .week-head .week-label { font-weight: 600; font-size: 13px; }
+  .week-head .total {
+    margin-left: auto; font-size: 12px; color: var(--wd-muted);
+  }
+  .week-head .total b { color: var(--wd-text); font-size: 13px; }
+
+  .week-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr); flex: 1; min-height: 0;
+  }
+  .day-col {
+    border-right: 1px solid var(--wd-line);
+    display: flex; flex-direction: column;
+    background: #fff; cursor: pointer;
+    position: relative;
+    transition: background 200ms ease;
+  }
+  .day-col:last-child { border-right: none; }
+  .day-col.weekend { background: #fafbfc; }
+  .day-col.today .day-num { color: var(--wd-blue); }
+  .day-col.target { background: #eaf4ff; box-shadow: inset 0 0 0 2px var(--wd-blue); z-index: 2; }
+  .day-head {
+    padding: 8px 6px 6px; text-align: center; border-bottom: 1px solid var(--wd-line); background: #fafbfc;
+  }
+  .day-name { font-size: 10px; color: var(--wd-muted); letter-spacing: 0.6px; font-weight: 600; }
+  .day-num  { font-size: 18px; font-weight: 600; margin-top: 2px; }
+  .day-body {
+    flex: 1; padding: 6px; display: flex; flex-direction: column; gap: 4px; overflow: hidden;
+  }
+  .time-block {
+    background: #2e8540; color: #fff; border-radius: 3px; padding: 4px 5px; font-size: 10px;
+    line-height: 1.2; opacity: 0; transform: scale(0.92);
+    transition: opacity 380ms ease, transform 380ms ease;
+  }
+  .time-block.show { opacity: 1; transform: scale(1); }
+  .time-block.in   { background: #2e8540; }
+  .time-block.proj { background: #0875e1; }
+  .time-block.over { background: #b8860b; }
+  .time-block .blk-hrs { font-weight: 700; font-size: 11px; }
+
+  .week-foot {
+    padding: 10px 14px; border-top: 1px solid var(--wd-line);
+    display: flex; align-items: center; gap: 8px; background: #fafbfc;
+  }
+  .btn-primary {
+    background: var(--wd-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 3px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+  .btn-primary:disabled { background: #b9c5d1; cursor: default; }
+  .btn-ghost {
+    background: #fff; color: var(--wd-blue); border: 1px solid var(--wd-blue);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer;
+  }
+
+  .summary-card {
+    background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 16px; font-size: 12px;
+  }
+  .summary-card h3 {
+    margin: 0 0 10px; font-size: 11px; color: var(--wd-muted);
+    text-transform: uppercase; letter-spacing: 0.6px; font-weight: 700;
+  }
+  .sum-row {
+    display: flex; justify-content: space-between; padding: 7px 0;
+    border-bottom: 1px dashed var(--wd-line);
+  }
+  .sum-row:last-child { border-bottom: none; }
+  .sum-row .v { font-weight: 600; }
+  .sum-row .v.ok { color: var(--wd-green); }
+  .sum-row .v.warn { color: var(--wd-amber); }
+  .legend { margin-top: 12px; display: flex; flex-direction: column; gap: 5px; font-size: 11px; color: var(--wd-muted); }
+  .legend .sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+
+  /* ---------- Modal (Time Entry) ---------- */
+  .modal-overlay {
+    position: absolute; inset: 0; background: rgba(14,20,28,0.45);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 320ms ease; pointer-events: none;
+  }
+  .screen.active .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: #fff; border-radius: 6px; width: 540px; max-width: 92%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35); overflow: hidden;
+    transform: translateY(10px); transition: transform 320ms ease;
+  }
+  .screen.active .modal-overlay.show .modal { transform: translateY(0); }
+  .modal-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--wd-line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .modal-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .modal-head .close { margin-left: auto; color: var(--wd-muted); cursor: pointer; font-size: 18px; }
+  .modal-body { padding: 16px 18px; font-size: 13px; }
+  .modal-footer {
+    padding: 12px 18px; border-top: 1px solid var(--wd-line);
+    display: flex; gap: 8px; justify-content: flex-end; background: #fafbfc;
+  }
+
+  .field { margin-bottom: 12px; }
+  .field label { display: block; font-size: 11px; color: var(--wd-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field .input, .field .select {
+    width: 100%; border: 1px solid var(--wd-line); border-radius: 3px; padding: 8px 10px;
+    font-size: 13px; background: #fff; display: flex; align-items: center; justify-content: space-between;
+  }
+  .field .select .caret { color: var(--wd-muted); }
+  .field .input.focus { border-color: var(--wd-blue); box-shadow: 0 0 0 2px rgba(8,117,225,0.12); }
+
+  .dropdown-list {
+    margin-top: 2px; border: 1px solid var(--wd-line); border-radius: 3px; background: #fff;
+    max-height: 0; overflow: hidden; transition: max-height 320ms ease;
+  }
+  .dropdown-list.open { max-height: 200px; }
+  .dropdown-list .item { padding: 7px 10px; font-size: 13px; border-bottom: 1px solid #f0f2f5; cursor: pointer; }
+  .dropdown-list .item:last-child { border-bottom: none; }
+  .dropdown-list .item:hover, .dropdown-list .item.sel { background: #eaf4ff; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .three-col { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 10px; }
+
+  /* ---------- Submit review screen ---------- */
+  .review-screen {
+    padding: 22px 28px; background: #fff; height: 100%;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 14px;
+  }
+  .review-table {
+    border: 1px solid var(--wd-line); border-radius: 6px; overflow: hidden;
+    background: #fff;
+  }
+  .review-table .row {
+    display: grid; grid-template-columns: 90px 1fr 1fr 90px 90px;
+    gap: 0; padding: 10px 14px; border-bottom: 1px solid var(--wd-line); font-size: 12px;
+    align-items: center;
+  }
+  .review-table .row:last-child { border-bottom: none; }
+  .review-table .row.head {
+    background: #fafbfc; font-weight: 600; color: var(--wd-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; font-size: 10px;
+  }
+  .review-table .pill {
+    display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px;
+    background: rgba(46,133,64,0.12); color: var(--wd-green); font-weight: 700;
+  }
+  .review-table .pill.warn { background: rgba(184,134,11,0.15); color: var(--wd-amber); }
+
+  .review-totals {
+    display: flex; gap: 14px; align-items: center;
+    padding: 14px 18px; background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 6px;
+  }
+  .review-totals .stat { display: flex; flex-direction: column; gap: 2px; }
+  .review-totals .stat .lbl { font-size: 10px; color: var(--wd-muted); text-transform: uppercase; letter-spacing: 0.6px; }
+  .review-totals .stat .val { font-size: 20px; font-weight: 700; color: var(--wd-text); }
+  .review-totals .stat .val.ok { color: var(--wd-green); }
+  .review-totals .stat .val.warn { color: var(--wd-amber); }
+  .review-totals .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  /* ---------- Confirmation ---------- */
+  .confirm-screen {
+    padding: 48px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; background: #fff; height: 100%;
+  }
+  .check {
+    width: 78px; height: 78px; border-radius: 50%; background: var(--wd-green);
+    color: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(46,133,64,0.3);
+    animation: pop 600ms ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .confirm-screen h2 { margin: 18px 0 6px; font-size: 22px; }
+  .confirm-screen p  { margin: 0; color: var(--wd-muted); font-size: 13px; }
+  .receipt {
+    margin-top: 22px; background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 18px; min-width: 380px; text-align: left;
+  }
+  .receipt .summary-row {
+    display: flex; justify-content: space-between; font-size: 12px;
+    padding: 6px 0; border-bottom: 1px dashed var(--wd-line);
+  }
+  .receipt .summary-row:last-child { border-bottom: none; }
+  .receipt .summary-row .k { color: var(--wd-muted); }
+
+  /* ---------- Cursor ---------- */
+  .cursor {
+    position: absolute; width: 22px; height: 22px; z-index: 50;
+    left: -40px; top: -40px;
+    pointer-events: none;
+    transition: left 700ms cubic-bezier(0.22, 0.61, 0.36, 1), top 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  .cursor.click::after {
+    content: ""; position: absolute; left: 2px; top: 2px; width: 22px; height: 22px;
+    border-radius: 50%; border: 2px solid rgba(8,117,225,0.6);
+    animation: ring 500ms ease-out;
+  }
+  @keyframes ring {
+    0%   { transform: scale(0.4); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ---------- Narration ---------- */
+  .narration {
+    position: absolute; left: 16px; bottom: 16px; right: 16px;
+    background: rgba(21,41,53,0.94); color: #fff; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; line-height: 1.4;
+    display: flex; align-items: flex-start; gap: 10px;
+    border-left: 4px solid var(--wd-orange);
+  }
+  .narration .n {
+    background: var(--wd-orange); color: #fff; font-weight: 700; font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+
+  footer.page {
+    max-width: 1100px; margin: 14px auto 40px; padding: 0 16px;
+    color: #8b97a3; font-size: 12px; line-height: 1.5;
+  }
+  footer.page a { color: #9ec3ea; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1><span class="badge">Workday HRM</span> Enter Time &amp; Submit Timesheet — Animated Walkthrough</h1>
+  <p>Daily tutorial · 2026-05-03 · Based on public Workday documentation and partner-published job aids.</p>
+</header>
+
+<div class="stage-wrap">
+  <div class="controls">
+    <button id="playBtn">Pause</button>
+    <button class="secondary" id="restartBtn">Restart</button>
+    <button class="secondary" id="prevBtn">&lsaquo; Prev</button>
+    <button class="secondary" id="nextBtn">Next &rsaquo;</button>
+    <div class="step-label" id="stepLabel">Step 1 / 8</div>
+  </div>
+
+  <div class="stage" id="stage">
+
+    <!-- Cursor overlay -->
+    <div class="cursor" id="cursor">
+      <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2 L2 18 L7 14 L10 20 L13 19 L10 13 L17 13 Z" fill="#ffffff" stroke="#152935" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- ============ STEP 1 — HOME DASHBOARD ============ -->
+    <div class="screen" data-step="1">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right">
+          <span>Inbox</span><span>Notifications</span>
+          <div class="wd-avatar">JM</div>
+        </div>
+      </div>
+      <div class="wd-body">
+        <div class="dashboard">
+          <h2 class="dash-hello">Good morning, Jordan</h2>
+          <p class="dash-sub">Sunday, May 3, 2026 · Pay period ends Saturday — 4 days of time still to enter</p>
+          <div class="apps-grid">
+            <div class="app-tile"><div class="icon ic-absence">A</div>Absence</div>
+            <div class="app-tile"><div class="icon ic-pay">P</div>Pay</div>
+            <div class="app-tile" id="timeTile"><div class="icon ic-time">T</div>Time</div>
+            <div class="app-tile"><div class="icon ic-benefits">B</div>Benefits</div>
+            <div class="app-tile"><div class="icon ic-learning">L</div>Learning</div>
+            <div class="app-tile"><div class="icon ic-career">C</div>Career</div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">1</span>
+        From your Workday home, click the <strong>Time</strong> app tile to open your weekly timesheet.
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 — ENTER TIME LANDING (EMPTY WEEK) ============ -->
+    <div class="screen" data-step="2">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="time-landing">
+          <div class="page-title">
+            <h2>Enter Time</h2>
+            <span class="crumb">› This Week</span>
+          </div>
+          <div class="time-grid-wrap">
+            <div class="week-card">
+              <div class="week-head">
+                <span class="nav-arrow">&lsaquo;</span>
+                <span class="week-label">Apr 27 – May 3, 2026 (Pay Period 9)</span>
+                <span class="nav-arrow">&rsaquo;</span>
+                <div class="total">Hours This Week <b>0.00</b></div>
+              </div>
+              <div class="week-grid" id="weekGrid2">
+                <!-- 7 day cols, no entries -->
+              </div>
+              <div class="week-foot">
+                <button class="btn-primary" disabled>Review</button>
+                <button class="btn-ghost">Auto-fill from Schedule</button>
+              </div>
+            </div>
+            <div class="summary-card">
+              <h3>Pay Period Summary</h3>
+              <div class="sum-row"><span>Scheduled</span><span class="v">40.00 h</span></div>
+              <div class="sum-row"><span>Entered</span><span class="v warn">0.00 h</span></div>
+              <div class="sum-row"><span>Approved</span><span class="v">0.00 h</span></div>
+              <div class="sum-row"><span>Project Code</span><span class="v">PRJ-1402</span></div>
+              <div class="legend">
+                <div><span class="sw" style="background:#2e8540;"></span>Regular (In)</div>
+                <div><span class="sw" style="background:#0875e1;"></span>Project</div>
+                <div><span class="sw" style="background:#b8860b;"></span>Overtime</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">2</span>
+        The <strong>Enter Time</strong> calendar opens on the current week. Click any <strong>day cell</strong> to start adding time.
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 — DAY SELECTED (TARGET HIGHLIGHT) ============ -->
+    <div class="screen" data-step="3">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="time-landing">
+          <div class="page-title">
+            <h2>Enter Time</h2>
+            <span class="crumb">› This Week › Monday, Apr 27</span>
+          </div>
+          <div class="time-grid-wrap">
+            <div class="week-card">
+              <div class="week-head">
+                <span class="nav-arrow">&lsaquo;</span>
+                <span class="week-label">Apr 27 – May 3, 2026 (Pay Period 9)</span>
+                <span class="nav-arrow">&rsaquo;</span>
+                <div class="total">Hours This Week <b>0.00</b></div>
+              </div>
+              <div class="week-grid" id="weekGrid3"></div>
+              <div class="week-foot">
+                <button class="btn-primary" disabled>Review</button>
+                <button class="btn-ghost">Auto-fill from Schedule</button>
+              </div>
+            </div>
+            <div class="summary-card">
+              <h3>Pay Period Summary</h3>
+              <div class="sum-row"><span>Scheduled</span><span class="v">40.00 h</span></div>
+              <div class="sum-row"><span>Entered</span><span class="v warn">0.00 h</span></div>
+              <div class="sum-row"><span>Approved</span><span class="v">0.00 h</span></div>
+              <div class="sum-row"><span>Project Code</span><span class="v">PRJ-1402</span></div>
+              <div class="legend">
+                <div><span class="sw" style="background:#2e8540;"></span>Regular (In)</div>
+                <div><span class="sw" style="background:#0875e1;"></span>Project</div>
+                <div><span class="sw" style="background:#b8860b;"></span>Overtime</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">3</span>
+        Monday is selected — the cell highlights blue. The <strong>Enter Time</strong> dialog opens automatically.
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — ENTER TIME MODAL: TIME TYPE DROPDOWN ============ -->
+    <div class="screen" data-step="4">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="time-landing" style="opacity:0.4;">
+          <div class="page-title"><h2>Enter Time</h2></div>
+          <div class="time-grid-wrap">
+            <div class="week-card">
+              <div class="week-head"><span class="week-label">Apr 27 – May 3, 2026</span></div>
+              <div class="week-grid" id="weekGrid4"></div>
+              <div class="week-foot"></div>
+            </div>
+            <div class="summary-card"></div>
+          </div>
+        </div>
+
+        <div class="modal-overlay show">
+          <div class="modal">
+            <div class="modal-head">
+              <h3>Enter Time — Monday, April 27, 2026</h3>
+              <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+              <div class="field">
+                <label>Time Type</label>
+                <div class="select" id="typeSelect">
+                  <span>Select Time Type</span>
+                  <span class="caret">▾</span>
+                </div>
+                <div class="dropdown-list open" id="typeList">
+                  <div class="item sel">Hours Worked — Regular (In)</div>
+                  <div class="item">Hours Worked — Project</div>
+                  <div class="item">Hours Worked — Training</div>
+                  <div class="item">Overtime — 1.5x</div>
+                  <div class="item">On-Call</div>
+                  <div class="item">Holiday</div>
+                </div>
+              </div>
+              <div class="three-col">
+                <div class="field">
+                  <label>Hours</label>
+                  <div class="input">8.00</div>
+                </div>
+                <div class="field">
+                  <label>In</label>
+                  <div class="input">9:00 AM</div>
+                </div>
+                <div class="field">
+                  <label>Out</label>
+                  <div class="input">5:00 PM</div>
+                </div>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost">Cancel</button>
+              <button class="btn-primary" id="okBtn4">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">4</span>
+        Choose a <strong>Time Type</strong> — most workers use <em>Hours Worked — Regular (In)</em>. Set <strong>In</strong> and <strong>Out</strong> times; <strong>Hours</strong> calculates automatically.
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — MONDAY ENTRY POSTED ============ -->
+    <div class="screen" data-step="5">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="time-landing">
+          <div class="page-title">
+            <h2>Enter Time</h2>
+            <span class="crumb">› This Week — 1 of 5 days entered</span>
+          </div>
+          <div class="time-grid-wrap">
+            <div class="week-card">
+              <div class="week-head">
+                <span class="nav-arrow">&lsaquo;</span>
+                <span class="week-label">Apr 27 – May 3, 2026 (Pay Period 9)</span>
+                <span class="nav-arrow">&rsaquo;</span>
+                <div class="total">Hours This Week <b>8.00</b></div>
+              </div>
+              <div class="week-grid" id="weekGrid5"></div>
+              <div class="week-foot">
+                <button class="btn-primary" disabled>Review</button>
+                <button class="btn-ghost">Auto-fill from Schedule</button>
+              </div>
+            </div>
+            <div class="summary-card">
+              <h3>Pay Period Summary</h3>
+              <div class="sum-row"><span>Scheduled</span><span class="v">40.00 h</span></div>
+              <div class="sum-row"><span>Entered</span><span class="v warn">8.00 h</span></div>
+              <div class="sum-row"><span>Approved</span><span class="v">0.00 h</span></div>
+              <div class="sum-row"><span>Project Code</span><span class="v">PRJ-1402</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">5</span>
+        Monday now shows an <strong>8h Regular</strong> block. Repeat for each day — or use <strong>Auto-fill from Schedule</strong> to copy your standard hours across the week.
+      </div>
+    </div>
+
+    <!-- ============ STEP 6 — FULL WEEK FILLED ============ -->
+    <div class="screen" data-step="6">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="time-landing">
+          <div class="page-title">
+            <h2>Enter Time</h2>
+            <span class="crumb">› This Week — Ready to review</span>
+          </div>
+          <div class="time-grid-wrap">
+            <div class="week-card">
+              <div class="week-head">
+                <span class="nav-arrow">&lsaquo;</span>
+                <span class="week-label">Apr 27 – May 3, 2026 (Pay Period 9)</span>
+                <span class="nav-arrow">&rsaquo;</span>
+                <div class="total">Hours This Week <b>42.00</b></div>
+              </div>
+              <div class="week-grid" id="weekGrid6"></div>
+              <div class="week-foot">
+                <button class="btn-primary" id="reviewBtn6">Review</button>
+                <button class="btn-ghost">Auto-fill from Schedule</button>
+              </div>
+            </div>
+            <div class="summary-card">
+              <h3>Pay Period Summary</h3>
+              <div class="sum-row"><span>Scheduled</span><span class="v">40.00 h</span></div>
+              <div class="sum-row"><span>Entered</span><span class="v ok">42.00 h</span></div>
+              <div class="sum-row"><span>Overtime</span><span class="v warn">2.00 h</span></div>
+              <div class="sum-row"><span>Project Code</span><span class="v">PRJ-1402</span></div>
+              <div class="legend">
+                <div><span class="sw" style="background:#2e8540;"></span>Regular (In)</div>
+                <div><span class="sw" style="background:#0875e1;"></span>Project</div>
+                <div><span class="sw" style="background:#b8860b;"></span>Overtime</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">6</span>
+        With all five workdays entered (and 2h overtime on Thursday) the totals add up. Click <strong>Review</strong> to open the submission summary.
+      </div>
+    </div>
+
+    <!-- ============ STEP 7 — REVIEW & SUBMIT ============ -->
+    <div class="screen" data-step="7">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="review-screen">
+          <div class="page-title">
+            <h2>Submit Time</h2>
+            <span class="crumb">› Apr 27 – May 3, 2026 · Approver: Sam Reyes</span>
+          </div>
+          <div class="review-table">
+            <div class="row head">
+              <div>Day</div><div>Time Type</div><div>Project / Tags</div><div>Hours</div><div>Status</div>
+            </div>
+            <div class="row"><div>Mon Apr 27</div><div>Hours Worked — Regular</div><div>PRJ-1402 · Onsite</div><div>8.00</div><div><span class="pill">Ready</span></div></div>
+            <div class="row"><div>Tue Apr 28</div><div>Hours Worked — Regular</div><div>PRJ-1402 · Onsite</div><div>8.00</div><div><span class="pill">Ready</span></div></div>
+            <div class="row"><div>Wed Apr 29</div><div>Hours Worked — Regular</div><div>PRJ-1402 · Remote</div><div>8.00</div><div><span class="pill">Ready</span></div></div>
+            <div class="row"><div>Thu Apr 30</div><div>Hours Worked — Regular</div><div>PRJ-1402 · Onsite</div><div>8.00</div><div><span class="pill">Ready</span></div></div>
+            <div class="row"><div>Thu Apr 30</div><div>Overtime — 1.5x</div><div>PRJ-1402 · Approved by Sam</div><div>2.00</div><div><span class="pill warn">Needs OT note</span></div></div>
+            <div class="row"><div>Fri May 1</div><div>Hours Worked — Regular</div><div>PRJ-1402 · Remote</div><div>8.00</div><div><span class="pill">Ready</span></div></div>
+          </div>
+          <div class="review-totals">
+            <div class="stat"><span class="lbl">Regular</span><span class="val ok">40.00 h</span></div>
+            <div class="stat"><span class="lbl">Overtime</span><span class="val warn">2.00 h</span></div>
+            <div class="stat"><span class="lbl">Total</span><span class="val">42.00 h</span></div>
+            <div class="actions">
+              <button class="btn-ghost">Save for Later</button>
+              <button class="btn-primary" id="submitBtn7">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">7</span>
+        Review every line — flagged items (like overtime needing a note) appear in amber. When the totals look right, click <strong>Submit</strong> to route the timesheet to your manager.
+      </div>
+    </div>
+
+    <!-- ============ STEP 8 — CONFIRMATION ============ -->
+    <div class="screen" data-step="8">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="confirm-screen">
+          <div class="check">✓</div>
+          <h2>Timesheet submitted</h2>
+          <p>Routed to <strong>Sam Reyes</strong> for approval. You'll be notified when it's approved or sent back.</p>
+          <div class="receipt">
+            <div class="summary-row"><span class="k">Period</span><span>Apr 27 – May 3, 2026</span></div>
+            <div class="summary-row"><span class="k">Regular</span><span>40.00 h</span></div>
+            <div class="summary-row"><span class="k">Overtime</span><span>2.00 h</span></div>
+            <div class="summary-row"><span class="k">Total Submitted</span><span>42.00 h</span></div>
+            <div class="summary-row"><span class="k">Status</span><span style="color:var(--wd-blue);">In Progress — Awaiting Approval</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">8</span>
+        While the timesheet is <em>Pending</em>, you can still edit entries and resubmit. After approval, corrections require a <strong>Correct Time</strong> action.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  <p>
+    This walkthrough is a teaching mockup based on publicly available Workday documentation and partner job aids.
+    Exact labels in your tenant may vary slightly by configuration (e.g., <em>Time Type</em> values, <em>In/Out</em> vs. <em>Hours-only</em> entry).
+    Sources:
+    <a href="https://www.workday.com/en-us/products/workforce-management/time-tracking.html">Workday Time Tracking</a>,
+    <a href="https://hr.uw.edu/workday/employee-self-service/time-and-absence/enter-and-submit-time/">UW HR — Enter and Submit Time</a>,
+    <a href="https://www.swarthmore.edu/human-resources/enter-time-workday">Swarthmore HR — Enter Time in Workday</a>.
+  </p>
+</footer>
+
+<script>
+  // ---------- Build week grids ----------
+  // Apr 27 (Mon) – May 3 (Sun) 2026. Day labels SUN..SAT? Workday week-of-time is usually Sun-start.
+  // We'll render Sun..Sat: May 3, Apr 27, 28, 29, 30, May 1, May 2.
+  // To keep it simple, render Mon-first since Workday's "week of" config varies.
+  const DAYS = [
+    { name: 'MON', num: 27, weekend: false },
+    { name: 'TUE', num: 28, weekend: false },
+    { name: 'WED', num: 29, weekend: false, today: true },
+    { name: 'THU', num: 30, weekend: false },
+    { name: 'FRI', num: 1, weekend: false },
+    { name: 'SAT', num: 2, weekend: true },
+    { name: 'SUN', num: 3, weekend: true }
+  ];
+
+  function buildWeek(targetId, opts = {}) {
+    const grid = document.getElementById(targetId);
+    if (!grid) return;
+    const target = opts.target;       // e.g. 'MON' to highlight
+    const blocks = opts.blocks || {}; // keyed by day name -> array of {hrs, type, label}
+    let html = '';
+    DAYS.forEach(d => {
+      const isTarget = (target === d.name);
+      const cls = ['day-col'];
+      if (d.weekend) cls.push('weekend');
+      if (d.today) cls.push('today');
+      if (isTarget) cls.push('target');
+      html += `<div class="${cls.join(' ')}">`;
+      html += `  <div class="day-head"><div class="day-name">${d.name}</div><div class="day-num">${d.num}</div></div>`;
+      html += `  <div class="day-body">`;
+      const list = blocks[d.name] || [];
+      list.forEach(b => {
+        html += `<div class="time-block show ${b.type || 'in'}"><div class="blk-hrs">${b.hrs}h</div><div>${b.label || 'Regular'}</div></div>`;
+      });
+      html += `  </div>`;
+      html += `</div>`;
+    });
+    grid.innerHTML = html;
+  }
+
+  buildWeek('weekGrid2', {});
+  buildWeek('weekGrid3', { target: 'MON' });
+  buildWeek('weekGrid4', { target: 'MON' });
+  buildWeek('weekGrid5', { blocks: { MON: [{ hrs: 8, type: 'in', label: 'Regular' }] } });
+  buildWeek('weekGrid6', {
+    blocks: {
+      MON: [{ hrs: 8, type: 'in', label: 'Regular' }],
+      TUE: [{ hrs: 8, type: 'in', label: 'Regular' }],
+      WED: [{ hrs: 8, type: 'in', label: 'Regular' }],
+      THU: [{ hrs: 8, type: 'in', label: 'Regular' }, { hrs: 2, type: 'over', label: 'Overtime' }],
+      FRI: [{ hrs: 8, type: 'in', label: 'Regular' }]
+    }
+  });
+
+  // ---------- Screen orchestration ----------
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const TOTAL = screens.length;
+  const stepLabel = document.getElementById('stepLabel');
+  const cursor = document.getElementById('cursor');
+  const playBtn = document.getElementById('playBtn');
+
+  let current = 0;
+  let playing = true;
+  let timer = null;
+  let cursorTimers = [];
+
+  // Duration per step in ms
+  const DURATIONS = [3800, 4000, 3600, 5200, 4400, 4600, 5400, 5200];
+
+  function clearCursorTimers() {
+    cursorTimers.forEach(t => clearTimeout(t));
+    cursorTimers = [];
+  }
+
+  function moveCursorTo(x, y, clickAfter = true) {
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    if (clickAfter) {
+      const t = setTimeout(() => {
+        cursor.classList.add('click');
+        const t2 = setTimeout(() => cursor.classList.remove('click'), 520);
+        cursorTimers.push(t2);
+      }, 720);
+      cursorTimers.push(t);
+    }
+  }
+
+  function offsetInStage(el) {
+    const stage = document.getElementById('stage');
+    const sr = stage.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return { x: er.left - sr.left + er.width / 2 - 11, y: er.top - sr.top + er.height / 2 - 11 };
+  }
+
+  function animateStep(i) {
+    clearCursorTimers();
+    cursor.style.left = '-40px';
+    cursor.style.top = '-40px';
+
+    const screen = screens[i];
+    const t = setTimeout(() => {
+      switch (i) {
+        case 0: {
+          const el = screen.querySelector('#timeTile');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 1: {
+          // hover Monday cell
+          const grid = screen.querySelector('#weekGrid2');
+          const cells = grid ? grid.querySelectorAll('.day-col') : [];
+          const target = cells[0]; // MON
+          if (target) { const p = offsetInStage(target); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 2: {
+          // cell selected — same Monday position
+          const grid = screen.querySelector('#weekGrid3');
+          const cells = grid ? grid.querySelectorAll('.day-col') : [];
+          const target = cells[0];
+          if (target) { const p = offsetInStage(target); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 3: {
+          // dropdown then OK
+          const list = screen.querySelector('#typeList .item.sel');
+          if (list) {
+            const p = offsetInStage(list);
+            moveCursorTo(p.x, p.y);
+            const t2 = setTimeout(() => {
+              const ok = screen.querySelector('#okBtn4');
+              if (ok) { const q = offsetInStage(ok); moveCursorTo(q.x, q.y); }
+            }, 1900);
+            cursorTimers.push(t2);
+          }
+          break;
+        }
+        case 4: {
+          // hover next day (Tuesday) to suggest "repeat"
+          const grid = screen.querySelector('#weekGrid5');
+          const cells = grid ? grid.querySelectorAll('.day-col') : [];
+          const target = cells[1]; // TUE
+          if (target) { const p = offsetInStage(target); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 5: {
+          // click Review
+          const el = screen.querySelector('#reviewBtn6');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 6: {
+          // click Submit
+          const el = screen.querySelector('#submitBtn7');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 7: {
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+      }
+    }, 250);
+    cursorTimers.push(t);
+  }
+
+  function showStep(i) {
+    current = ((i % TOTAL) + TOTAL) % TOTAL;
+    screens.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    stepLabel.textContent = `Step ${current + 1} / ${TOTAL}`;
+    animateStep(current);
+  }
+
+  function tick() {
+    if (!playing) return;
+    const dur = DURATIONS[current] || 4000;
+    timer = setTimeout(() => {
+      showStep(current + 1);
+      tick();
+    }, dur);
+  }
+
+  function stopTick() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  function togglePlay() {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    if (playing) tick();
+    else stopTick();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    stopTick(); showStep(0); if (playing) tick();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    stopTick(); showStep(current - 1); if (playing) tick();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    stopTick(); showStep(current + 1); if (playing) tick();
+  });
+
+  // Kick off
+  showStep(0);
+  tick();
+</script>
+
+</body>
+</html>
