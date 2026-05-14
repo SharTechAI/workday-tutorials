@@ -1,0 +1,1176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Workday HRM Tutorial — Update Personal Information (2026-05-05)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --wd-orange: #f38b00;
+    --wd-blue:   #0875e1;
+    --wd-navy:   #152935;
+    --wd-bg:     #f2f4f7;
+    --wd-line:   #dadde2;
+    --wd-text:   #25313d;
+    --wd-muted:  #6b7684;
+    --wd-green:  #2e8540;
+    --wd-amber:  #b8860b;
+    --wd-red:    #b1342f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--wd-text); background: #101418; }
+
+  header.page {
+    padding: 18px 24px; background: #0b0f13; color: #fff;
+    border-bottom: 1px solid #1d242c;
+  }
+  header.page h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  header.page p { margin: 0; font-size: 13px; color: #9aa6b2; }
+  header.page .badge {
+    display: inline-block; background: var(--wd-orange); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 8px; letter-spacing: 0.4px;
+  }
+
+  .stage-wrap { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #cdd4dc; font-size: 13px;
+  }
+  .controls button {
+    background: var(--wd-blue); color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.secondary { background: #334352; }
+  .step-label { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    background: var(--wd-bg); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    border: 1px solid #1d242c;
+  }
+  .screen {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity 420ms ease;
+  }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  /* ---------- Workday chrome ---------- */
+  .wd-topbar {
+    height: 48px; background: var(--wd-navy); color: #fff;
+    display: flex; align-items: center; padding: 0 14px; gap: 14px;
+    font-size: 13px;
+  }
+  .wd-topbar .menu-icon {
+    width: 22px; height: 16px; display: inline-flex; flex-direction: column; justify-content: space-between;
+  }
+  .wd-topbar .menu-icon span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+  .wd-topbar .logo { font-weight: 700; letter-spacing: 0.5px; color: var(--wd-orange); }
+  .wd-topbar .search {
+    flex: 1; max-width: 420px; background: #24333f; border-radius: 3px; padding: 6px 10px; color: #aeb8c3; font-size: 12px;
+  }
+  .wd-topbar .right { margin-left: auto; display: flex; gap: 12px; align-items: center; color: #c8d2dc; }
+  .wd-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#ffb46b,#f38b00);
+    display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .wd-body { position: absolute; top: 48px; bottom: 0; left: 0; right: 0; overflow: hidden; }
+
+  /* ---------- Home dashboard ---------- */
+  .dashboard {
+    padding: 24px 28px; background: linear-gradient(#f7f9fc, #eef2f7); height: 100%;
+  }
+  .dash-hello { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .dash-sub { color: var(--wd-muted); font-size: 13px; margin: 0 0 22px; }
+  .apps-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .app-tile {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 10px; text-align: center; font-size: 12px; color: var(--wd-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); cursor: pointer;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .app-tile.hl { border-color: var(--wd-blue); box-shadow: 0 0 0 2px rgba(8,117,225,0.15); }
+  .app-tile .icon {
+    width: 34px; height: 34px; border-radius: 8px; margin: 0 auto 8px;
+    display: grid; place-items: center; color: #fff; font-size: 16px; font-weight: 700;
+  }
+  .ic-personal { background: #2a8fbd; }
+  .ic-pay      { background: #6a4fb6; }
+  .ic-time     { background: #2e8540; }
+  .ic-benefits { background: #b65c24; }
+  .ic-learning { background: #0875e1; }
+  .ic-career   { background: #c23878; }
+
+  /* ---------- Personal Info hub ---------- */
+  .pi-landing { padding: 22px 28px; background: #fff; height: 100%; overflow: hidden; }
+  .page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .page-title h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .page-title .crumb { color: var(--wd-muted); font-size: 12px; }
+
+  .pi-cols {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px; height: calc(100% - 50px);
+  }
+  .pi-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .pi-card h3 {
+    margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--wd-line);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700; background: #fafbfc;
+  }
+  .menu-list { display: flex; flex-direction: column; }
+  .menu-list .item {
+    padding: 12px 16px; border-bottom: 1px solid var(--wd-line);
+    font-size: 13px; display: flex; align-items: center; gap: 10px;
+    color: var(--wd-blue); cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .menu-list .item:last-child { border-bottom: none; }
+  .menu-list .item:hover, .menu-list .item.hl {
+    background: #eaf4ff;
+  }
+  .menu-list .item .ic {
+    width: 22px; height: 22px; border-radius: 4px; flex-shrink: 0;
+    background: rgba(8,117,225,0.12);
+    display: grid; place-items: center; color: var(--wd-blue);
+    font-size: 12px; font-weight: 700;
+  }
+  .menu-list .item .label { flex: 1; }
+  .menu-list .item .meta { color: var(--wd-muted); font-size: 11px; }
+
+  /* ---------- Display / View page ---------- */
+  .pi-view {
+    padding: 22px 28px; background: #fff; height: 100%; overflow: hidden;
+    display: grid; grid-template-rows: auto 1fr; gap: 12px;
+  }
+  .pi-toolbar {
+    display: flex; gap: 10px; align-items: center; padding: 4px 0;
+  }
+  .pi-toolbar .crumb-row { display: flex; align-items: center; gap: 8px; }
+  .pi-toolbar .crumb-row h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .pi-toolbar .crumb-row .crumb { color: var(--wd-muted); font-size: 12px; }
+  .pi-toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .btn-primary {
+    background: var(--wd-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 3px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:disabled { background: #b9c5d1; cursor: default; }
+  .btn-ghost {
+    background: #fff; color: var(--wd-blue); border: 1px solid var(--wd-blue);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-cancel {
+    background: #fff; color: var(--wd-text); border: 1px solid var(--wd-line);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+
+  .pi-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0;
+  }
+  .pi-panel {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column; min-height: 0;
+  }
+  .pi-panel .ph {
+    padding: 10px 14px; background: #fafbfc; border-bottom: 1px solid var(--wd-line);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .pi-panel .ph .pill {
+    margin-left: auto; font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 999px;
+    background: rgba(46,133,64,0.12); color: var(--wd-green); letter-spacing: 0.4px;
+  }
+  .pi-panel .pb { padding: 10px 14px; font-size: 12px; overflow: auto; }
+  .pi-row {
+    display: grid; grid-template-columns: 110px 1fr; padding: 7px 0;
+    border-bottom: 1px dashed var(--wd-line); align-items: baseline;
+  }
+  .pi-row:last-child { border-bottom: none; }
+  .pi-row .k { color: var(--wd-muted); font-size: 11px; }
+  .pi-row .v { color: var(--wd-text); font-size: 13px; font-weight: 500; }
+  .pi-row .v .sub { color: var(--wd-muted); font-size: 11px; font-weight: 400; display: block; margin-top: 2px; }
+
+  /* ---------- Edit form ---------- */
+  .form-screen {
+    padding: 22px 28px; background: #fff; height: 100%; overflow: hidden;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 12px;
+  }
+  .form-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0; overflow: hidden;
+  }
+  .form-section {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: auto; padding: 14px 18px;
+  }
+  .form-section h4 {
+    margin: 0 0 10px; font-size: 13px; font-weight: 700;
+    color: var(--wd-text); padding-bottom: 8px; border-bottom: 1px solid var(--wd-line);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-section h4 .ic-edit {
+    width: 16px; height: 16px; color: var(--wd-blue);
+  }
+  .field { margin-bottom: 10px; }
+  .field label {
+    display: block; font-size: 11px; color: var(--wd-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;
+    font-weight: 600;
+  }
+  .field label .req { color: var(--wd-red); margin-left: 2px; }
+  .input, .select {
+    width: 100%; padding: 7px 10px; font-size: 13px;
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 3px;
+    color: var(--wd-text); font-family: inherit;
+    transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    position: relative;
+  }
+  .input.focused, .select.focused {
+    border-color: var(--wd-blue); box-shadow: 0 0 0 3px rgba(8,117,225,0.15);
+    background: #fafdff;
+  }
+  .input.changed {
+    border-color: var(--wd-amber); background: #fffbf0;
+  }
+  .input .typed {
+    color: var(--wd-text); font-weight: 500;
+  }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .helper {
+    font-size: 11px; color: var(--wd-muted); margin-top: 3px;
+  }
+  .helper.amber { color: var(--wd-amber); }
+
+  /* Caret animation for typing fields */
+  .caret {
+    display: inline-block; width: 1px; height: 14px;
+    background: var(--wd-text); margin-left: 1px;
+    vertical-align: text-bottom;
+    animation: caretBlink 1s steps(2, end) infinite;
+  }
+  @keyframes caretBlink { 50% { opacity: 0; } }
+
+  .typed-progressive { display: inline-block; }
+
+  /* Reveal characters using width animation */
+  .reveal-old {
+    display: inline-block;
+    overflow: hidden; white-space: nowrap;
+    color: var(--wd-text);
+    text-decoration: line-through;
+    text-decoration-color: var(--wd-red);
+    opacity: 0.5;
+    margin-right: 6px;
+  }
+  .reveal-new {
+    display: inline-block;
+    overflow: hidden; white-space: nowrap;
+    width: 0;
+    color: var(--wd-amber);
+    font-weight: 600;
+  }
+  .screen.active .reveal-new {
+    animation: typeInNew 1.4s steps(28, end) 600ms forwards;
+  }
+  @keyframes typeInNew {
+    from { width: 0; }
+    to   { width: var(--target-w, 14ch); }
+  }
+
+  /* Address change uses a multi-line block */
+  .addr-block { font-size: 13px; line-height: 1.5; }
+  .addr-block .old {
+    color: var(--wd-muted); text-decoration: line-through; text-decoration-color: var(--wd-red); opacity: 0.55;
+  }
+  .addr-block .new-line {
+    color: var(--wd-amber); font-weight: 600; display: block;
+    overflow: hidden; white-space: nowrap;
+  }
+  .screen.active .addr-block .new-line.l1 { animation: lineIn 700ms steps(20, end) 500ms forwards; width: 0; }
+  .screen.active .addr-block .new-line.l2 { animation: lineIn 600ms steps(15, end) 1300ms forwards; width: 0; }
+  @keyframes lineIn {
+    from { width: 0; }
+    to   { width: 100%; }
+  }
+
+  .form-footer {
+    display: flex; gap: 8px; align-items: center;
+    padding-top: 8px; border-top: 1px solid var(--wd-line);
+  }
+  .form-footer .right { margin-left: auto; display: flex; gap: 8px; }
+  .form-footer .save-note { font-size: 11px; color: var(--wd-muted); }
+
+  /* ---------- Emergency contact form ---------- */
+  .emergency-form {
+    padding: 22px 28px; background: #fff; height: 100%; overflow: hidden;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 12px;
+  }
+  .emerg-grid {
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; min-height: 0;
+  }
+  .ec-summary {
+    background: linear-gradient(135deg, #f9fbff, #f0f6fd);
+    border: 1px solid #d6e4f3; border-radius: 6px; padding: 16px 18px;
+    display: flex; flex-direction: column; gap: 10px;
+    font-size: 12px;
+  }
+  .ec-summary .row { display: flex; justify-content: space-between; padding: 4px 0; border-bottom: 1px dashed #d6e4f3; }
+  .ec-summary .row:last-child { border-bottom: none; }
+  .ec-summary .row .k { color: var(--wd-muted); }
+  .ec-summary .row .v { font-weight: 600; }
+  .ec-summary .added-pill {
+    background: rgba(46,133,64,0.12); color: var(--wd-green);
+    padding: 4px 10px; font-size: 10px; font-weight: 700; border-radius: 999px;
+    align-self: flex-start; letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: absolute; left: 50%; bottom: 70px; transform: translate(-50%, 20px);
+    background: var(--wd-navy); color: #fff; padding: 10px 16px;
+    border-radius: 6px; font-size: 13px; box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+    display: flex; align-items: center; gap: 10px;
+    opacity: 0; transition: opacity 320ms ease, transform 320ms ease;
+    border-left: 4px solid var(--wd-green);
+    z-index: 30;
+  }
+  .screen.active .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast .check { width: 22px; height: 22px; border-radius: 50%; background: var(--wd-green); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+
+  /* ---------- Confirmation ---------- */
+  .confirm-screen {
+    padding: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; background: linear-gradient(#fbfdff, #f0f6fd); height: 100%;
+  }
+  .check-big {
+    width: 78px; height: 78px; border-radius: 50%; background: var(--wd-green);
+    color: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(46,133,64,0.3);
+    animation: pop 600ms ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .confirm-screen h2 { margin: 16px 0 6px; font-size: 22px; }
+  .confirm-screen p  { margin: 0; color: var(--wd-muted); font-size: 13px; max-width: 540px; }
+  .summary-card {
+    margin-top: 22px; background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 16px 20px; min-width: 460px; text-align: left;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+  .summary-card h4 {
+    margin: 0 0 10px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-muted);
+  }
+  .summary-row {
+    display: grid; grid-template-columns: 110px 1fr 1fr; gap: 8px;
+    padding: 7px 0; border-bottom: 1px dashed var(--wd-line);
+    font-size: 12px; align-items: baseline;
+  }
+  .summary-row:last-child { border-bottom: none; }
+  .summary-row .k { color: var(--wd-muted); }
+  .summary-row .from { text-decoration: line-through; color: var(--wd-muted); opacity: 0.7; }
+  .summary-row .to { color: var(--wd-text); font-weight: 600; }
+  .approval-line {
+    margin-top: 12px; font-size: 12px; color: var(--wd-muted); display: flex; gap: 8px; align-items: center;
+  }
+  .approval-line .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--wd-amber);
+  }
+
+  /* ---------- Cursor ---------- */
+  .cursor {
+    position: absolute; width: 22px; height: 22px; z-index: 50;
+    left: -40px; top: -40px;
+    pointer-events: none;
+    transition: left 700ms cubic-bezier(0.22, 0.61, 0.36, 1), top 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  .cursor.click::after {
+    content: ""; position: absolute; left: 2px; top: 2px; width: 22px; height: 22px;
+    border-radius: 50%; border: 2px solid rgba(8,117,225,0.6);
+    animation: ring 500ms ease-out;
+  }
+  @keyframes ring {
+    0%   { transform: scale(0.4); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ---------- Narration ---------- */
+  .narration {
+    position: absolute; left: 16px; bottom: 16px; right: 16px;
+    background: rgba(21,41,53,0.94); color: #fff; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; line-height: 1.4;
+    display: flex; align-items: flex-start; gap: 10px;
+    border-left: 4px solid var(--wd-orange);
+    z-index: 40;
+  }
+  .narration .n {
+    background: var(--wd-orange); color: #fff; font-weight: 700; font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+
+  footer.page {
+    max-width: 1100px; margin: 14px auto 40px; padding: 0 16px;
+    color: #8b97a3; font-size: 12px; line-height: 1.5;
+  }
+  footer.page a { color: #9ec3ea; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1><span class="badge">Workday HRM</span> Update Personal Information — Animated Walkthrough</h1>
+  <p>Daily tutorial · 2026-05-05 · Based on public Workday documentation and partner-published job aids.</p>
+</header>
+
+<div class="stage-wrap">
+  <div class="controls">
+    <button id="playBtn">Pause</button>
+    <button class="secondary" id="restartBtn">Restart</button>
+    <button class="secondary" id="prevBtn">&lsaquo; Prev</button>
+    <button class="secondary" id="nextBtn">Next &rsaquo;</button>
+    <div class="step-label" id="stepLabel">Step 1 / 8</div>
+  </div>
+
+  <div class="stage" id="stage">
+
+    <!-- Cursor overlay -->
+    <div class="cursor" id="cursor">
+      <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2 L2 18 L7 14 L10 20 L13 19 L10 13 L17 13 Z" fill="#ffffff" stroke="#152935" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- ============ STEP 1 — HOME DASHBOARD ============ -->
+    <div class="screen" data-step="1">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right">
+          <span>Inbox</span><span>Notifications</span>
+          <div class="wd-avatar">JM</div>
+        </div>
+      </div>
+      <div class="wd-body">
+        <div class="dashboard">
+          <h2 class="dash-hello">Good morning, Jordan</h2>
+          <p class="dash-sub">Tuesday, May 5, 2026 · You moved last weekend — let's update your contact details and emergency contact.</p>
+          <div class="apps-grid">
+            <div class="app-tile" id="personalTile"><div class="icon ic-personal">P</div>Personal Information</div>
+            <div class="app-tile"><div class="icon ic-pay">$</div>Pay</div>
+            <div class="app-tile"><div class="icon ic-time">T</div>Time</div>
+            <div class="app-tile"><div class="icon ic-benefits">B</div>Benefits</div>
+            <div class="app-tile"><div class="icon ic-learning">L</div>Learning</div>
+            <div class="app-tile"><div class="icon ic-career">C</div>Career</div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">1</span>
+        From your Workday home, click the <strong>Personal Information</strong> app tile to manage contact details, IDs, and emergency contacts.
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 — PERSONAL INFO HUB ============ -->
+    <div class="screen" data-step="2">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="pi-landing">
+          <div class="page-title">
+            <h2>Personal Information</h2>
+            <span class="crumb">› Worker Hub</span>
+          </div>
+          <div class="pi-cols">
+            <div class="pi-card">
+              <h3>Change</h3>
+              <div class="menu-list">
+                <div class="item" id="contactLink"><div class="ic">C</div><span class="label">Contact Information</span><span class="meta">Address · Phone · Email</span></div>
+                <div class="item"><div class="ic">L</div><span class="label">Legal Name</span><span class="meta">Requires HR review</span></div>
+                <div class="item"><div class="ic">P</div><span class="label">Preferred Name</span><span class="meta">No approval needed</span></div>
+                <div class="item"><div class="ic">D</div><span class="label">Personal Information</span><span class="meta">DOB · Marital Status</span></div>
+                <div class="item" id="emergencyLink"><div class="ic">E</div><span class="label">Emergency Contacts</span><span class="meta">1 on file</span></div>
+              </div>
+            </div>
+            <div class="pi-card">
+              <h3>View</h3>
+              <div class="menu-list">
+                <div class="item"><div class="ic">N</div><span class="label">Names</span><span class="meta">Legal &amp; Preferred</span></div>
+                <div class="item"><div class="ic">C</div><span class="label">Contact Information</span><span class="meta">Read-only summary</span></div>
+                <div class="item"><div class="ic">I</div><span class="label">IDs</span><span class="meta">Government &amp; Passport</span></div>
+                <div class="item"><div class="ic">A</div><span class="label">Addresses</span><span class="meta">Home · Mailing</span></div>
+                <div class="item"><div class="ic">R</div><span class="label">More</span><span class="meta">Languages, Hobbies, etc.</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">2</span>
+        The Personal Information hub opens. Under <strong>Change</strong>, click <strong>Contact Information</strong> to update your address, phone, and email.
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 — CONTACT INFO DISPLAY ============ -->
+    <div class="screen" data-step="3">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="pi-view">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Contact Information</h2>
+              <span class="crumb">› Personal Information › Change</span>
+            </div>
+            <div class="actions">
+              <button class="btn-primary" id="editBtn3">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 113 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>
+                Edit
+              </button>
+            </div>
+          </div>
+          <div class="pi-grid">
+            <div class="pi-panel">
+              <div class="ph">Home Contact <span class="pill">Primary</span></div>
+              <div class="pb">
+                <div class="pi-row">
+                  <div class="k">Address</div>
+                  <div class="v">
+                    214 Mission Loop, Apt 3B
+                    <span class="sub">Austin, TX 78701 · United States of America</span>
+                  </div>
+                </div>
+                <div class="pi-row">
+                  <div class="k">Phone</div>
+                  <div class="v">+1 (512) 555-0142 <span class="sub">Mobile · Primary</span></div>
+                </div>
+                <div class="pi-row">
+                  <div class="k">Email</div>
+                  <div class="v">jordan.morales@personal.com <span class="sub">Personal · Primary</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="pi-panel">
+              <div class="ph">Work Contact</div>
+              <div class="pb">
+                <div class="pi-row">
+                  <div class="k">Address</div>
+                  <div class="v">500 W 6th St, Floor 12<span class="sub">Austin, TX 78701 · United States of America</span></div>
+                </div>
+                <div class="pi-row">
+                  <div class="k">Phone</div>
+                  <div class="v">+1 (512) 555-2200 <span class="sub">Office · Primary</span></div>
+                </div>
+                <div class="pi-row">
+                  <div class="k">Email</div>
+                  <div class="v">jmorales@acme.com <span class="sub">Work · Primary</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">3</span>
+        Workday displays your <strong>Home Contact</strong> and <strong>Work Contact</strong> blocks. Click <strong>Edit</strong> to open the change form.
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — EDIT ADDRESS ============ -->
+    <div class="screen" data-step="4">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="form-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Change Contact Information</h2>
+              <span class="crumb">› Editing Home Address</span>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-section">
+              <h4>
+                <svg class="ic-edit" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                Home Address
+              </h4>
+              <div class="field">
+                <label>Effective Date <span class="req">*</span></label>
+                <div class="input">05 / 05 / 2026</div>
+                <div class="helper">Defaults to today. The new address takes effect on this date.</div>
+              </div>
+              <div class="field">
+                <label>Country <span class="req">*</span></label>
+                <div class="select">United States of America</div>
+              </div>
+              <div class="field" id="addrField">
+                <label>Address Line 1 <span class="req">*</span></label>
+                <div class="input changed focused" id="addrInput">
+                  <span class="addr-block">
+                    <span class="old">214 Mission Loop, Apt 3B</span>
+                    <span class="new-line l1" style="--target-w: 24ch;">1820 W 38th Street, Apt 5</span>
+                  </span>
+                </div>
+                <div class="helper amber">Modified — old value will be replaced when you submit.</div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>City <span class="req">*</span></label>
+                  <div class="input changed">Austin</div>
+                </div>
+                <div class="field">
+                  <label>State <span class="req">*</span></label>
+                  <div class="select">Texas</div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Postal Code <span class="req">*</span></label>
+                  <div class="input changed">
+                    <span class="addr-block">
+                      <span class="old">78701</span>
+                      <span class="new-line l2" style="--target-w: 5ch;">78731</span>
+                    </span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Address Type</label>
+                  <div class="select">Home</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-section">
+              <h4>
+                <svg class="ic-edit" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                Phone Number
+              </h4>
+              <div class="field">
+                <label>Country Phone Code <span class="req">*</span></label>
+                <div class="select">United States of America (+1)</div>
+              </div>
+              <div class="field">
+                <label>Phone Number <span class="req">*</span></label>
+                <div class="input">+1 (512) 555-0142</div>
+                <div class="helper">Tip: Include extension below if this is a desk phone.</div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Extension</label>
+                  <div class="input">&nbsp;</div>
+                </div>
+                <div class="field">
+                  <label>Phone Device <span class="req">*</span></label>
+                  <div class="select">Mobile</div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Type <span class="req">*</span></label>
+                  <div class="select">Home</div>
+                </div>
+                <div class="field">
+                  <label>Use For</label>
+                  <div class="input">Primary</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="form-footer">
+            <span class="save-note">Workday saves your changes as a draft until you click Submit.</span>
+            <div class="right">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-primary" id="submitBtn4" disabled>Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">4</span>
+        Type the new street address and ZIP. Old values stay visible (struck through) so you can confirm the change before submitting.
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — SUBMIT ADDRESS ============ -->
+    <div class="screen" data-step="5">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="form-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Change Contact Information</h2>
+              <span class="crumb">› Ready to Submit</span>
+            </div>
+          </div>
+          <div class="form-grid">
+            <div class="form-section">
+              <h4>
+                <svg class="ic-edit" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg>
+                Home Address — Updated
+              </h4>
+              <div class="field">
+                <label>Effective Date</label>
+                <div class="input">05 / 05 / 2026</div>
+              </div>
+              <div class="field">
+                <label>Address Line 1</label>
+                <div class="input changed">1820 W 38th Street, Apt 5</div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>City</label>
+                  <div class="input changed">Austin</div>
+                </div>
+                <div class="field">
+                  <label>State</label>
+                  <div class="select">Texas</div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Postal Code</label>
+                  <div class="input changed">78731</div>
+                </div>
+                <div class="field">
+                  <label>Country</label>
+                  <div class="select">United States</div>
+                </div>
+              </div>
+              <div class="helper amber">3 fields modified · Address Line 1, Postal Code, Effective Date</div>
+            </div>
+            <div class="form-section">
+              <h4>
+                <svg class="ic-edit" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72 12.84 12.84 0 00.7 2.81 2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45 12.84 12.84 0 002.81.7A2 2 0 0122 16.92z"/></svg>
+                Phone Number — Updated
+              </h4>
+              <div class="field">
+                <label>Phone Number</label>
+                <div class="input changed" id="phoneField5">
+                  <span class="addr-block">
+                    <span class="old">+1 (512) 555-0142</span>
+                    <span class="new-line l1" style="--target-w: 18ch;">+1 (737) 555-0816</span>
+                  </span>
+                </div>
+                <div class="helper amber">Modified — replaces the existing primary mobile number.</div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Phone Device</label>
+                  <div class="select">Mobile</div>
+                </div>
+                <div class="field">
+                  <label>Use For</label>
+                  <div class="input">Primary</div>
+                </div>
+              </div>
+              <div class="field" style="margin-top: 8px;">
+                <label>Comment</label>
+                <div class="input" style="min-height: 50px; line-height: 1.4; color: var(--wd-muted);">New mobile number after carrier port. Old number deactivated 5/4.</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-footer">
+            <span class="save-note">All required fields complete · changes routed to HR Partner for review.</span>
+            <div class="right">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-primary" id="submitBtn5">Submit</button>
+            </div>
+          </div>
+        </div>
+        <div class="toast" id="toastSubmitted"><div class="check">✓</div>Contact information change submitted for approval.</div>
+      </div>
+      <div class="narration"><span class="n">5</span>
+        Review the modified fields, then click <strong>Submit</strong>. The change is routed to your HR Partner for approval.
+      </div>
+    </div>
+
+    <!-- ============ STEP 6 — BACK AT HUB, OPEN EMERGENCY CONTACTS ============ -->
+    <div class="screen" data-step="6">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox <small style="background:#f38b00;color:#fff;border-radius:8px;padding:0 6px;font-size:9px;font-weight:700;">1</small></span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="pi-landing">
+          <div class="page-title">
+            <h2>Personal Information</h2>
+            <span class="crumb">› Worker Hub</span>
+          </div>
+          <div class="pi-cols">
+            <div class="pi-card">
+              <h3>Change</h3>
+              <div class="menu-list">
+                <div class="item"><div class="ic">C</div><span class="label">Contact Information</span><span class="meta" style="color:var(--wd-amber);">Pending HR review</span></div>
+                <div class="item"><div class="ic">L</div><span class="label">Legal Name</span><span class="meta">Requires HR review</span></div>
+                <div class="item"><div class="ic">P</div><span class="label">Preferred Name</span><span class="meta">No approval needed</span></div>
+                <div class="item"><div class="ic">D</div><span class="label">Personal Information</span><span class="meta">DOB · Marital Status</span></div>
+                <div class="item hl" id="emergencyLink6"><div class="ic">E</div><span class="label">Emergency Contacts</span><span class="meta">1 on file</span></div>
+              </div>
+            </div>
+            <div class="pi-card">
+              <h3>Recent Activity</h3>
+              <div class="pb" style="padding: 14px 18px; font-size: 12px;">
+                <div style="display:flex; gap:10px; padding:8px 0; border-bottom: 1px dashed var(--wd-line);">
+                  <div style="width:8px;height:8px;border-radius:50%;background:var(--wd-amber);margin-top:5px;"></div>
+                  <div style="flex:1;">
+                    <div style="font-weight:600;">Change Contact Information</div>
+                    <div style="color:var(--wd-muted); margin-top:2px;">Submitted just now · Awaiting HR Partner approval</div>
+                  </div>
+                </div>
+                <div style="display:flex; gap:10px; padding:8px 0;">
+                  <div style="width:8px;height:8px;border-radius:50%;background:var(--wd-green);margin-top:5px;"></div>
+                  <div style="flex:1;">
+                    <div style="font-weight:600;">Direct Deposit Updated</div>
+                    <div style="color:var(--wd-muted); margin-top:2px;">Apr 18, 2026 · Approved automatically</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">6</span>
+        The Contact change shows as <strong>Pending HR review</strong>. Now click <strong>Emergency Contacts</strong> to add a backup point of contact.
+      </div>
+    </div>
+
+    <!-- ============ STEP 7 — ADD EMERGENCY CONTACT ============ -->
+    <div class="screen" data-step="7">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="emergency-form">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Edit My Emergency Contacts</h2>
+              <span class="crumb">› Add Alternate Contact</span>
+            </div>
+          </div>
+          <div class="emerg-grid">
+            <div class="form-section">
+              <h4>Alternate Emergency Contact</h4>
+              <div class="field">
+                <label>Priority <span class="req">*</span></label>
+                <div class="select">2 — Alternate</div>
+                <div class="helper">Workday calls Priority 1 first, then 2, etc.</div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>First Name <span class="req">*</span></label>
+                  <div class="input focused" id="ecFirst">
+                    <span class="typed">Maya</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Last Name <span class="req">*</span></label>
+                  <div class="input">
+                    <span class="addr-block">
+                      <span class="new-line l1" style="--target-w: 9ch;">Morales</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Relationship <span class="req">*</span></label>
+                <div class="select">Sister</div>
+              </div>
+              <div class="field">
+                <label>Preferred Language</label>
+                <div class="select">English (United States)</div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h4>Contact Methods</h4>
+              <div class="field">
+                <label>Phone Country Code <span class="req">*</span></label>
+                <div class="select">United States of America (+1)</div>
+              </div>
+              <div class="field">
+                <label>Phone Number <span class="req">*</span></label>
+                <div class="input">
+                  <span class="addr-block">
+                    <span class="new-line l2" style="--target-w: 16ch;">+1 (512) 555-0317</span>
+                  </span>
+                </div>
+                <div class="helper">Mobile preferred — Workday will SMS in addition to calling.</div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Phone Device</label>
+                  <div class="select">Mobile</div>
+                </div>
+                <div class="field">
+                  <label>Type</label>
+                  <div class="select">Home</div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Email Address</label>
+                <div class="input" style="color: var(--wd-muted);">maya.morales@example.com</div>
+              </div>
+              <div class="ec-summary" style="margin-top: 10px;">
+                <span class="added-pill">New Contact</span>
+                <div class="row"><span class="k">Name</span><span class="v">Maya Morales</span></div>
+                <div class="row"><span class="k">Relationship</span><span class="v">Sister</span></div>
+                <div class="row"><span class="k">Priority</span><span class="v">2 (Alternate)</span></div>
+              </div>
+            </div>
+          </div>
+          <div class="form-footer">
+            <span class="save-note">Emergency contacts are stored privately and used only when you cannot be reached.</span>
+            <div class="right">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-primary" id="submitBtn7">Submit</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">7</span>
+        Fill in the alternate's name, relationship, and phone — then click <strong>Submit</strong>. Emergency contact updates apply immediately, no approval needed.
+      </div>
+    </div>
+
+    <!-- ============ STEP 8 — CONFIRMATION ============ -->
+    <div class="screen" data-step="8">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="confirm-screen">
+          <div class="check-big">✓</div>
+          <h2>You've successfully updated your information</h2>
+          <p>Workday saved your emergency contact and submitted your contact-information change for HR approval. You'll get a notification once it's approved.</p>
+          <div class="summary-card">
+            <h4>Summary of Changes — May 5, 2026</h4>
+            <div class="summary-row">
+              <div class="k">Home Address</div>
+              <div class="from">214 Mission Loop, Apt 3B · 78701</div>
+              <div class="to">1820 W 38th Street, Apt 5 · 78731</div>
+            </div>
+            <div class="summary-row">
+              <div class="k">Mobile Phone</div>
+              <div class="from">+1 (512) 555-0142</div>
+              <div class="to">+1 (737) 555-0816</div>
+            </div>
+            <div class="summary-row">
+              <div class="k">Emergency #2</div>
+              <div class="from">— not on file —</div>
+              <div class="to">Maya Morales (Sister) · +1 (512) 555-0317</div>
+            </div>
+          </div>
+          <div class="approval-line">
+            <div class="dot"></div>
+            Contact change pending HR Partner review · Emergency contact saved immediately
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">8</span>
+        All done. Workday confirms the changes, sends approvals where needed, and notifies you once the HR review completes.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  <p>Tutorial reproduces a typical Workday Worker self-service flow for updating Home Address, Phone Number, and Emergency Contacts. Field labels (e.g. "Effective Date", "Address Line 1", "Priority") and the Edit / Submit pattern follow Workday's published task layout. Specific tile names, approval routing, and visibility of Personal Information sub-tasks vary by tenant configuration and security policy. Sources: Workday Community help articles "Edit My Contact Information" and "Edit My Emergency Contacts", and university job aids (e.g., Cornell, Yale, GMU Workday training pages).</p>
+</footer>
+
+<script>
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const TOTAL = screens.length;
+  const stepLabel = document.getElementById('stepLabel');
+  const cursor = document.getElementById('cursor');
+  const playBtn = document.getElementById('playBtn');
+
+  let current = 0;
+  let playing = true;
+  let timer = null;
+  let cursorTimers = [];
+
+  // Duration per step in ms
+  const DURATIONS = [3800, 4200, 4000, 5400, 5200, 4400, 5400, 5200];
+
+  function clearCursorTimers() {
+    cursorTimers.forEach(t => clearTimeout(t));
+    cursorTimers = [];
+  }
+
+  function moveCursorTo(x, y, clickAfter = true) {
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    if (clickAfter) {
+      const t = setTimeout(() => {
+        cursor.classList.add('click');
+        const t2 = setTimeout(() => cursor.classList.remove('click'), 520);
+        cursorTimers.push(t2);
+      }, 720);
+      cursorTimers.push(t);
+    }
+  }
+
+  function offsetInStage(el) {
+    const stage = document.getElementById('stage');
+    const sr = stage.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return { x: er.left - sr.left + er.width / 2 - 11, y: er.top - sr.top + er.height / 2 - 11 };
+  }
+
+  function showTimedToast(screen, id, delay = 1400) {
+    const toast = screen.querySelector('#' + id);
+    if (!toast) return;
+    const t = setTimeout(() => toast.classList.add('show'), delay);
+    cursorTimers.push(t);
+  }
+
+  function animateStep(i) {
+    clearCursorTimers();
+    cursor.style.left = '-40px';
+    cursor.style.top = '-40px';
+
+    document.querySelectorAll('.toast.show').forEach(t => t.classList.remove('show'));
+
+    const screen = screens[i];
+    const t = setTimeout(() => {
+      switch (i) {
+        case 0: {
+          const el = screen.querySelector('#personalTile');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 1: {
+          const el = screen.querySelector('#contactLink');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 2: {
+          const el = screen.querySelector('#editBtn3');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 3: {
+          // hover the Address Line 1 input (typing animation runs via CSS)
+          const el = screen.querySelector('#addrField');
+          if (el) {
+            const p = offsetInStage(el);
+            moveCursorTo(p.x, p.y, false);
+          }
+          break;
+        }
+        case 4: {
+          // park cursor on the phone field briefly, then move to Submit
+          const phone = screen.querySelector('#phoneField5');
+          if (phone) {
+            const p = offsetInStage(phone);
+            moveCursorTo(p.x, p.y, false);
+          }
+          const t2 = setTimeout(() => {
+            const ok = screen.querySelector('#submitBtn5');
+            if (ok) { const q = offsetInStage(ok); moveCursorTo(q.x, q.y); }
+          }, 2000);
+          cursorTimers.push(t2);
+          showTimedToast(screen, 'toastSubmitted', 3500);
+          break;
+        }
+        case 5: {
+          const el = screen.querySelector('#emergencyLink6');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 6: {
+          // briefly park on the form, then move to Submit
+          const ec = screen.querySelector('#ecFirst');
+          if (ec) {
+            const p = offsetInStage(ec);
+            moveCursorTo(p.x, p.y, false);
+          }
+          const t2 = setTimeout(() => {
+            const ok = screen.querySelector('#submitBtn7');
+            if (ok) { const q = offsetInStage(ok); moveCursorTo(q.x, q.y); }
+          }, 2400);
+          cursorTimers.push(t2);
+          break;
+        }
+        case 7: {
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+      }
+    }, 250);
+    cursorTimers.push(t);
+  }
+
+  function showStep(i) {
+    current = ((i % TOTAL) + TOTAL) % TOTAL;
+    screens.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    stepLabel.textContent = `Step ${current + 1} / ${TOTAL}`;
+    animateStep(current);
+  }
+
+  function tick() {
+    if (!playing) return;
+    const dur = DURATIONS[current] || 4000;
+    timer = setTimeout(() => {
+      showStep(current + 1);
+      tick();
+    }, dur);
+  }
+
+  function stopTick() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  function togglePlay() {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    if (playing) tick();
+    else stopTick();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    stopTick(); showStep(0); if (playing) tick();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    stopTick(); showStep(current - 1); if (playing) tick();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    stopTick(); showStep(current + 1); if (playing) tick();
+  });
+
+  showStep(0);
+  tick();
+</script>
+
+</body>
+</html>

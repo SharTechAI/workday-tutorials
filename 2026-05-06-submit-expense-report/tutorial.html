@@ -1,0 +1,1193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Workday HRM Tutorial — Submit Expense Report (2026-05-06)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --wd-orange: #f38b00;
+    --wd-blue:   #0875e1;
+    --wd-navy:   #152935;
+    --wd-bg:     #f2f4f7;
+    --wd-line:   #dadde2;
+    --wd-text:   #25313d;
+    --wd-muted:  #6b7684;
+    --wd-green:  #2e8540;
+    --wd-amber:  #b8860b;
+    --wd-red:    #b1342f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--wd-text); background: #101418; }
+
+  header.page {
+    padding: 18px 24px; background: #0b0f13; color: #fff;
+    border-bottom: 1px solid #1d242c;
+  }
+  header.page h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  header.page p { margin: 0; font-size: 13px; color: #9aa6b2; }
+  header.page .badge {
+    display: inline-block; background: var(--wd-orange); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 8px; letter-spacing: 0.4px;
+  }
+
+  .stage-wrap { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #cdd4dc; font-size: 13px;
+  }
+  .controls button {
+    background: var(--wd-blue); color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.secondary { background: #334352; }
+  .step-label { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    background: var(--wd-bg); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    border: 1px solid #1d242c;
+  }
+  .screen {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity 420ms ease;
+  }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  /* ---------- Workday chrome ---------- */
+  .wd-topbar {
+    height: 48px; background: var(--wd-navy); color: #fff;
+    display: flex; align-items: center; padding: 0 14px; gap: 14px;
+    font-size: 13px;
+  }
+  .wd-topbar .menu-icon {
+    width: 22px; height: 16px; display: inline-flex; flex-direction: column; justify-content: space-between;
+  }
+  .wd-topbar .menu-icon span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+  .wd-topbar .logo { font-weight: 700; letter-spacing: 0.5px; color: var(--wd-orange); }
+  .wd-topbar .search {
+    flex: 1; max-width: 420px; background: #24333f; border-radius: 3px; padding: 6px 10px; color: #aeb8c3; font-size: 12px;
+  }
+  .wd-topbar .right { margin-left: auto; display: flex; gap: 12px; align-items: center; color: #c8d2dc; }
+  .wd-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#ffb46b,#f38b00);
+    display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .wd-body { position: absolute; top: 48px; bottom: 0; left: 0; right: 0; overflow: hidden; }
+
+  /* ---------- Home dashboard ---------- */
+  .dashboard {
+    padding: 24px 28px; background: linear-gradient(#f7f9fc, #eef2f7); height: 100%;
+  }
+  .dash-hello { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .dash-sub { color: var(--wd-muted); font-size: 13px; margin: 0 0 22px; }
+  .apps-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .app-tile {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 10px; text-align: center; font-size: 12px; color: var(--wd-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); cursor: pointer;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .app-tile.hl { border-color: var(--wd-blue); box-shadow: 0 0 0 2px rgba(8,117,225,0.15); }
+  .app-tile .icon {
+    width: 34px; height: 34px; border-radius: 8px; margin: 0 auto 8px;
+    display: grid; place-items: center; color: #fff; font-size: 16px; font-weight: 700;
+  }
+  .ic-personal { background: #2a8fbd; }
+  .ic-pay      { background: #6a4fb6; }
+  .ic-time     { background: #2e8540; }
+  .ic-benefits { background: #b65c24; }
+  .ic-learning { background: #0875e1; }
+  .ic-expense  { background: #d2622f; }
+  .ic-career   { background: #c23878; }
+
+  /* ---------- Expenses landing ---------- */
+  .ex-landing { padding: 22px 28px; background: #fff; height: 100%; overflow: hidden; }
+  .page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .page-title h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .page-title .crumb { color: var(--wd-muted); font-size: 12px; }
+
+  .ex-actions {
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; height: calc(100% - 50px);
+  }
+  .ex-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .ex-card h3 {
+    margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--wd-line);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700; background: #fafbfc;
+  }
+  .menu-list { display: flex; flex-direction: column; }
+  .menu-list .item {
+    padding: 12px 16px; border-bottom: 1px solid var(--wd-line);
+    font-size: 13px; display: flex; align-items: center; gap: 10px;
+    color: var(--wd-blue); cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .menu-list .item:last-child { border-bottom: none; }
+  .menu-list .item:hover, .menu-list .item.hl {
+    background: #eaf4ff;
+  }
+  .menu-list .item .ic {
+    width: 22px; height: 22px; border-radius: 4px; flex-shrink: 0;
+    background: rgba(8,117,225,0.12);
+    display: grid; place-items: center; color: var(--wd-blue);
+    font-size: 12px; font-weight: 700;
+  }
+  .menu-list .item .label { flex: 1; }
+  .menu-list .item .meta { color: var(--wd-muted); font-size: 11px; }
+
+  .ex-stats {
+    background: linear-gradient(135deg,#fffaf0,#fef0e0);
+    border: 1px solid #f5d6a8; border-radius: 6px;
+    padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .ex-stats h4 {
+    margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-amber);
+  }
+  .ex-stats .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #f0d1a3; font-size: 12px; }
+  .ex-stats .row:last-child { border-bottom: none; }
+  .ex-stats .row .k { color: var(--wd-muted); }
+  .ex-stats .row .v { font-weight: 700; color: var(--wd-text); }
+  .ex-stats .row .v .badge-st {
+    font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 999px;
+    margin-left: 6px; letter-spacing: 0.4px; text-transform: uppercase;
+  }
+  .badge-paid    { background: rgba(46,133,64,0.14); color: var(--wd-green); }
+  .badge-pending { background: rgba(184,134,11,0.18); color: var(--wd-amber); }
+
+  .create-pill {
+    background: var(--wd-blue); color: #fff; border: none;
+    padding: 10px 16px; border-radius: 4px; font-size: 13px; font-weight: 600;
+    cursor: pointer; align-self: flex-start; margin-top: 4px;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: background 200ms ease, transform 200ms ease;
+  }
+  .create-pill.hl { box-shadow: 0 0 0 4px rgba(8,117,225,0.15); }
+  .create-pill svg { display: block; }
+
+  /* ---------- Generic page chrome ---------- */
+  .page-screen {
+    padding: 22px 28px; background: #fff; height: 100%; overflow: hidden;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 12px;
+  }
+  .pi-toolbar {
+    display: flex; gap: 10px; align-items: center; padding: 4px 0;
+  }
+  .pi-toolbar .crumb-row { display: flex; align-items: center; gap: 8px; }
+  .pi-toolbar .crumb-row h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .pi-toolbar .crumb-row .crumb { color: var(--wd-muted); font-size: 12px; }
+  .pi-toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .btn-primary {
+    background: var(--wd-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 3px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:disabled { background: #b9c5d1; cursor: default; }
+  .btn-ghost {
+    background: #fff; color: var(--wd-blue); border: 1px solid var(--wd-blue);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-cancel {
+    background: #fff; color: var(--wd-text); border: 1px solid var(--wd-line);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+
+  /* ---------- Header form (Create Expense Report) ---------- */
+  .form-grid-2 {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0; overflow: hidden;
+  }
+  .form-section {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: auto; padding: 14px 18px;
+  }
+  .form-section h4 {
+    margin: 0 0 10px; font-size: 13px; font-weight: 700;
+    color: var(--wd-text); padding-bottom: 8px; border-bottom: 1px solid var(--wd-line);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .form-section h4 .ic-edit { width: 16px; height: 16px; color: var(--wd-blue); }
+  .field { margin-bottom: 10px; }
+  .field label {
+    display: block; font-size: 11px; color: var(--wd-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;
+    font-weight: 600;
+  }
+  .field label .req { color: var(--wd-red); margin-left: 2px; }
+  .input, .select {
+    width: 100%; padding: 7px 10px; font-size: 13px;
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 3px;
+    color: var(--wd-text); font-family: inherit;
+    transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    position: relative;
+  }
+  .input.focused, .select.focused {
+    border-color: var(--wd-blue); box-shadow: 0 0 0 3px rgba(8,117,225,0.15);
+    background: #fafdff;
+  }
+  .input.changed { border-color: var(--wd-amber); background: #fffbf0; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .helper { font-size: 11px; color: var(--wd-muted); margin-top: 3px; }
+  .helper.amber { color: var(--wd-amber); }
+  .helper.green { color: var(--wd-green); }
+
+  /* Reveal characters using width animation */
+  .reveal-new {
+    display: inline-block; overflow: hidden; white-space: nowrap;
+    width: 0; color: var(--wd-amber); font-weight: 600;
+  }
+  .screen.active .reveal-new.r1 { animation: lineIn 1100ms steps(28, end) 350ms forwards; }
+  .screen.active .reveal-new.r2 { animation: lineIn 900ms steps(20, end) 1500ms forwards; }
+  .screen.active .reveal-new.r3 { animation: lineIn 800ms steps(14, end) 2500ms forwards; }
+  @keyframes lineIn {
+    from { width: 0; }
+    to   { width: var(--target-w, 100%); }
+  }
+
+  .form-footer {
+    display: flex; gap: 8px; align-items: center;
+    padding-top: 8px; border-top: 1px solid var(--wd-line);
+  }
+  .form-footer .right { margin-left: auto; display: flex; gap: 8px; }
+  .form-footer .save-note { font-size: 11px; color: var(--wd-muted); }
+
+  /* ---------- Empty Expense Report list ---------- */
+  .er-shell {
+    padding: 22px 28px; background: #fff; height: 100%; overflow: hidden;
+    display: grid; grid-template-rows: auto auto 1fr auto; gap: 12px;
+  }
+  .er-meta {
+    background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 10px 14px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+    font-size: 12px;
+  }
+  .er-meta .k { color: var(--wd-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+  .er-meta .v { color: var(--wd-text); font-weight: 600; margin-top: 2px; }
+
+  .lines-card {
+    border: 1px solid var(--wd-line); border-radius: 6px; overflow: hidden;
+    background: #fff; display: flex; flex-direction: column; min-height: 0;
+  }
+  .lines-card .lh {
+    padding: 10px 14px; background: #fafbfc; border-bottom: 1px solid var(--wd-line);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .lines-card .lh .add-line {
+    margin-left: auto; background: var(--wd-blue); color: #fff;
+    padding: 5px 12px; border-radius: 3px; font-size: 12px; font-weight: 600;
+    border: none; cursor: pointer; letter-spacing: 0.3px; text-transform: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: background 200ms ease, box-shadow 200ms ease;
+  }
+  .lines-card .lh .add-line.hl { box-shadow: 0 0 0 4px rgba(8,117,225,0.15); }
+  .empty-lines {
+    flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: var(--wd-muted); font-size: 13px; text-align: center; padding: 30px;
+  }
+  .empty-lines .receipt-art {
+    width: 88px; height: 96px; border: 2px dashed #c8d0d9; border-radius: 6px;
+    margin: 0 auto 14px; position: relative; background: #fbfcfd;
+  }
+  .empty-lines .receipt-art::before, .empty-lines .receipt-art::after {
+    content: ""; position: absolute; left: 12px; right: 12px; height: 6px; border-radius: 2px; background: #e3e7ec;
+  }
+  .empty-lines .receipt-art::before { top: 18px; }
+  .empty-lines .receipt-art::after  { top: 32px; right: 28px; }
+  .empty-lines strong { color: var(--wd-text); display: block; margin-bottom: 4px; }
+
+  /* ---------- Expense line form (full width) ---------- */
+  .ef-grid { display: grid; grid-template-columns: 1.05fr 1fr; gap: 14px; min-height: 0; overflow: hidden; }
+  .receipt-drop {
+    border: 2px dashed #b6c2d0; border-radius: 6px; background: #f7faff;
+    padding: 16px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; color: var(--wd-muted); gap: 8px; font-size: 12px;
+    transition: border-color 200ms ease, background 200ms ease;
+    height: 100%;
+  }
+  .receipt-drop.uploaded { border-style: solid; border-color: var(--wd-green); background: #f1faf2; color: var(--wd-text); }
+  .receipt-drop .rc-icon {
+    width: 44px; height: 44px; border-radius: 50%;
+    background: rgba(8,117,225,0.12); color: var(--wd-blue);
+    display: grid; place-items: center; font-weight: 700; font-size: 18px;
+  }
+  .receipt-drop.uploaded .rc-icon { background: rgba(46,133,64,0.16); color: var(--wd-green); }
+  .receipt-drop .filename { color: var(--wd-text); font-weight: 600; font-size: 13px; }
+  .receipt-drop .filemeta { color: var(--wd-muted); font-size: 11px; }
+  .receipt-thumb {
+    width: 100%; max-width: 160px; height: 92px; border-radius: 4px; background:
+      linear-gradient(180deg, #fff 0 38%, transparent 38% 100%),
+      linear-gradient(180deg, #fbfcfd, #fbfcfd) padding-box,
+      linear-gradient(135deg,#cbd6e2,#aab8c7) border-box;
+    border: 1px solid var(--wd-line);
+    position: relative; overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+  .receipt-thumb::before {
+    content: "MARRIOTT  ATX"; position: absolute; top: 8px; left: 0; right: 0;
+    font-size: 9px; letter-spacing: 1px; color: var(--wd-muted); text-align: center;
+  }
+  .receipt-thumb .rt-line {
+    position: absolute; left: 10px; right: 10px; height: 4px; background: #d8dee5; border-radius: 2px;
+  }
+  .receipt-thumb .rt-line:nth-child(1) { top: 28px; }
+  .receipt-thumb .rt-line:nth-child(2) { top: 38px; right: 32px; }
+  .receipt-thumb .rt-line:nth-child(3) { top: 48px; }
+  .receipt-thumb .rt-line:nth-child(4) { top: 58px; right: 60px; }
+  .receipt-thumb .rt-total {
+    position: absolute; bottom: 8px; left: 10px; right: 10px; height: 14px;
+    background: var(--wd-navy); color: #fff; font-size: 9px; letter-spacing: 0.5px;
+    display: flex; align-items: center; justify-content: space-between; padding: 0 6px;
+    border-radius: 2px;
+  }
+
+  /* ---------- Expense lines list (Step 6) ---------- */
+  .lines-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .lines-table thead th {
+    text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--wd-muted); font-weight: 700; padding: 8px 12px; border-bottom: 1px solid var(--wd-line);
+    background: #fafbfc;
+  }
+  .lines-table tbody td {
+    padding: 10px 12px; border-bottom: 1px solid var(--wd-line); color: var(--wd-text);
+  }
+  .lines-table tbody tr:last-child td { border-bottom: none; }
+  .lines-table tbody td.amt { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .lines-table .item-pill {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 2px 7px; border-radius: 3px; background: #eef3f9; font-size: 11px; font-weight: 600;
+  }
+  .lines-table .item-pill .dot { width: 7px; height: 7px; border-radius: 50%; }
+  .pill-hotel  .dot { background: #d2622f; }
+  .pill-meal   .dot { background: #2e8540; }
+  .pill-mile   .dot { background: #6a4fb6; }
+
+  .lines-table .receipt-tag {
+    font-size: 10px; padding: 2px 7px; border-radius: 3px; font-weight: 700;
+    background: rgba(46,133,64,0.14); color: var(--wd-green);
+    letter-spacing: 0.3px; text-transform: uppercase;
+  }
+
+  .totals-strip {
+    display: grid; grid-template-columns: 1fr auto; gap: 8px;
+    padding: 10px 14px; border-top: 2px solid var(--wd-navy);
+    background: #f8fafc; font-size: 13px;
+  }
+  .totals-strip .lbl { color: var(--wd-muted); }
+  .totals-strip .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+  .totals-strip .grand .lbl { color: var(--wd-text); font-weight: 700; }
+  .totals-strip .grand .val { color: var(--wd-blue); font-size: 16px; }
+
+  .approval-rail {
+    background: linear-gradient(135deg, #f9fbff, #f0f6fd);
+    border: 1px solid #d6e4f3; border-radius: 6px;
+    padding: 12px 16px; display: flex; align-items: center; gap: 14px; font-size: 12px;
+  }
+  .approval-rail .step-dot {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--wd-amber);
+    box-shadow: 0 0 0 4px rgba(184,134,11,0.18);
+  }
+  .approval-rail .step-bar { height: 2px; flex: 1; background: linear-gradient(90deg, var(--wd-amber), #d8dee5); border-radius: 2px; }
+  .approval-rail .step-label-mini { color: var(--wd-muted); font-size: 11px; }
+  .approval-rail strong { color: var(--wd-text); }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: absolute; left: 50%; bottom: 70px; transform: translate(-50%, 20px);
+    background: var(--wd-navy); color: #fff; padding: 10px 16px;
+    border-radius: 6px; font-size: 13px; box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+    display: flex; align-items: center; gap: 10px;
+    opacity: 0; transition: opacity 320ms ease, transform 320ms ease;
+    border-left: 4px solid var(--wd-green);
+    z-index: 30;
+  }
+  .screen.active .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast .check { width: 22px; height: 22px; border-radius: 50%; background: var(--wd-green); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+
+  /* ---------- Confirmation ---------- */
+  .confirm-screen {
+    padding: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; background: linear-gradient(#fbfdff, #f0f6fd); height: 100%;
+  }
+  .check-big {
+    width: 78px; height: 78px; border-radius: 50%; background: var(--wd-green);
+    color: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(46,133,64,0.3);
+    animation: pop 600ms ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .confirm-screen h2 { margin: 16px 0 6px; font-size: 22px; }
+  .confirm-screen p  { margin: 0; color: var(--wd-muted); font-size: 13px; max-width: 560px; }
+  .summary-card {
+    margin-top: 20px; background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 16px 20px; min-width: 520px; text-align: left;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+  .summary-card h4 {
+    margin: 0 0 10px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-muted);
+  }
+  .summary-row {
+    display: grid; grid-template-columns: 24px 1fr 80px;
+    gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--wd-line);
+    font-size: 12px; align-items: baseline;
+  }
+  .summary-row:last-of-type { border-bottom: 2px solid var(--wd-navy); padding-bottom: 9px; }
+  .summary-row .k { color: var(--wd-muted); }
+  .summary-row .desc { color: var(--wd-text); font-weight: 500; }
+  .summary-row .amt { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .summary-grand {
+    display: grid; grid-template-columns: 1fr 80px; gap: 10px;
+    padding: 9px 0 4px; font-size: 14px; font-weight: 700;
+  }
+  .summary-grand .v { color: var(--wd-blue); text-align: right; font-variant-numeric: tabular-nums; }
+  .approval-line {
+    margin-top: 12px; font-size: 12px; color: var(--wd-muted); display: flex; gap: 8px; align-items: center;
+  }
+  .approval-line .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--wd-amber);
+  }
+
+  /* ---------- Cursor ---------- */
+  .cursor {
+    position: absolute; width: 22px; height: 22px; z-index: 50;
+    left: -40px; top: -40px;
+    pointer-events: none;
+    transition: left 700ms cubic-bezier(0.22, 0.61, 0.36, 1), top 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  .cursor.click::after {
+    content: ""; position: absolute; left: 2px; top: 2px; width: 22px; height: 22px;
+    border-radius: 50%; border: 2px solid rgba(8,117,225,0.6);
+    animation: ring 500ms ease-out;
+  }
+  @keyframes ring {
+    0%   { transform: scale(0.4); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ---------- Narration ---------- */
+  .narration {
+    position: absolute; left: 16px; bottom: 16px; right: 16px;
+    background: rgba(21,41,53,0.94); color: #fff; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; line-height: 1.4;
+    display: flex; align-items: flex-start; gap: 10px;
+    border-left: 4px solid var(--wd-orange);
+    z-index: 40;
+  }
+  .narration .n {
+    background: var(--wd-orange); color: #fff; font-weight: 700; font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+
+  footer.page {
+    max-width: 1100px; margin: 14px auto 40px; padding: 0 16px;
+    color: #8b97a3; font-size: 12px; line-height: 1.5;
+  }
+  footer.page a { color: #9ec3ea; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1><span class="badge">Workday HRM</span> Submit Expense Report — Animated Walkthrough</h1>
+  <p>Daily tutorial · 2026-05-06 · Based on public Workday documentation and partner-published job aids.</p>
+</header>
+
+<div class="stage-wrap">
+  <div class="controls">
+    <button id="playBtn">Pause</button>
+    <button class="secondary" id="restartBtn">Restart</button>
+    <button class="secondary" id="prevBtn">&lsaquo; Prev</button>
+    <button class="secondary" id="nextBtn">Next &rsaquo;</button>
+    <div class="step-label" id="stepLabel">Step 1 / 8</div>
+  </div>
+
+  <div class="stage" id="stage">
+
+    <!-- Cursor overlay -->
+    <div class="cursor" id="cursor">
+      <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2 L2 18 L7 14 L10 20 L13 19 L10 13 L17 13 Z" fill="#ffffff" stroke="#152935" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- ============ STEP 1 — HOME DASHBOARD ============ -->
+    <div class="screen" data-step="1">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right">
+          <span>Inbox</span><span>Notifications</span>
+          <div class="wd-avatar">JM</div>
+        </div>
+      </div>
+      <div class="wd-body">
+        <div class="dashboard">
+          <h2 class="dash-hello">Good morning, Jordan</h2>
+          <p class="dash-sub">Wednesday, May 6, 2026 · You have 1 trip with receipts to expense from last week's Austin → Chicago client visit.</p>
+          <div class="apps-grid">
+            <div class="app-tile" id="expenseTile"><div class="icon ic-expense">$</div>Expenses</div>
+            <div class="app-tile"><div class="icon ic-pay">$</div>Pay</div>
+            <div class="app-tile"><div class="icon ic-time">T</div>Time</div>
+            <div class="app-tile"><div class="icon ic-personal">P</div>Personal</div>
+            <div class="app-tile"><div class="icon ic-benefits">B</div>Benefits</div>
+            <div class="app-tile"><div class="icon ic-learning">L</div>Learning</div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">1</span>
+        From your Workday home, click the <strong>Expenses</strong> app tile to start a new expense report.
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 — EXPENSES LANDING ============ -->
+    <div class="screen" data-step="2">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="ex-landing">
+          <div class="page-title">
+            <h2>Expenses</h2>
+            <span class="crumb">› Worker Hub</span>
+          </div>
+          <div class="ex-actions">
+            <div class="ex-card">
+              <h3>Tasks</h3>
+              <div class="menu-list">
+                <div class="item hl" id="createER"><div class="ic">+</div><span class="label">Create Expense Report</span><span class="meta">From scratch or template</span></div>
+                <div class="item"><div class="ic">P</div><span class="label">Create Expense Report from Spend Authorization</span><span class="meta">Pre-approved travel</span></div>
+                <div class="item"><div class="ic">C</div><span class="label">Edit Expense Report</span><span class="meta">2 drafts</span></div>
+                <div class="item"><div class="ic">R</div><span class="label">My Receipts</span><span class="meta">3 unmatched · uploaded via mobile</span></div>
+                <div class="item"><div class="ic">V</div><span class="label">View Expense Reports</span><span class="meta">Status &amp; history</span></div>
+              </div>
+            </div>
+            <div class="ex-stats">
+              <h4>Recent Expense Reports</h4>
+              <div class="row"><span class="k">EXP-2026-0214 · Apr trip to NYC</span><span class="v">$1,842.13 <span class="badge-st badge-paid">Paid</span></span></div>
+              <div class="row"><span class="k">EXP-2026-0198 · Conf registration</span><span class="v">$795.00 <span class="badge-st badge-paid">Paid</span></span></div>
+              <div class="row"><span class="k">EXP-2026-0166 · Mar mileage</span><span class="v">$112.74 <span class="badge-st badge-pending">In Review</span></span></div>
+              <div class="row"><span class="k">YTD Reimbursed</span><span class="v">$3,261.49</span></div>
+              <div class="row"><span class="k">Avg approval time</span><span class="v">2.3 business days</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">2</span>
+        The Expenses hub opens. Under <strong>Tasks</strong>, click <strong>Create Expense Report</strong>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 — REPORT HEADER FORM ============ -->
+    <div class="screen" data-step="3">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Create Expense Report</h2>
+              <span class="crumb">› Header · Step 1 of 2</span>
+            </div>
+          </div>
+          <div class="form-grid-2">
+            <div class="form-section">
+              <h4>Expense Report Header</h4>
+              <div class="field">
+                <label>Memo <span class="req">*</span></label>
+                <div class="input changed focused" id="memoField">
+                  <span class="reveal-new r1" style="--target-w: 28ch;">Austin → Chicago client trip — Apr 28-30</span>
+                </div>
+                <div class="helper">Short title shown in approval queues and reimbursement reports.</div>
+              </div>
+              <div class="field">
+                <label>Expense Report Date <span class="req">*</span></label>
+                <div class="input">05 / 06 / 2026</div>
+                <div class="helper">Defaults to today.</div>
+              </div>
+              <div class="field">
+                <label>Business Purpose <span class="req">*</span></label>
+                <div class="select">Client Visit · Existing Account</div>
+                <div class="helper">Required for tax reporting and receipt audit.</div>
+              </div>
+              <div class="field">
+                <label>Currency <span class="req">*</span></label>
+                <div class="select">USD — US Dollar</div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h4>Charging Defaults</h4>
+              <div class="field">
+                <label>Company <span class="req">*</span></label>
+                <div class="select">Acme Industries, Inc. (US)</div>
+              </div>
+              <div class="field">
+                <label>Cost Center <span class="req">*</span></label>
+                <div class="select">CC-4120 — Field Sales / North America</div>
+              </div>
+              <div class="field">
+                <label>Region</label>
+                <div class="select">Central US</div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Spend Authorization</label>
+                  <div class="select">— None —</div>
+                </div>
+                <div class="field">
+                  <label>Customer (optional)</label>
+                  <div class="input changed" id="customerField">
+                    <span class="reveal-new r2" style="--target-w: 22ch;">Northwind Logistics LLC</span>
+                  </div>
+                </div>
+              </div>
+              <div class="helper green">Defaults pulled from your home Cost Center · Override per line if needed.</div>
+            </div>
+          </div>
+          <div class="form-footer">
+            <span class="save-note">Workday saves the header as a draft. You'll add expense lines next.</span>
+            <div class="right">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-primary" id="okHeader">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">3</span>
+        Enter the report's <strong>Memo</strong>, business purpose, and charging defaults — then click <strong>OK</strong> to open the line editor.
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — EMPTY EXPENSE REPORT ============ -->
+    <div class="screen" data-step="4">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="er-shell">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Expense Report — EXP-2026-0231</h2>
+              <span class="crumb">› Draft · 0 lines</span>
+            </div>
+            <div class="actions">
+              <button class="btn-cancel">Save for Later</button>
+              <button class="btn-primary" disabled>Submit</button>
+            </div>
+          </div>
+          <div class="er-meta">
+            <div><div class="k">Memo</div><div class="v">Austin → Chicago client trip — Apr 28-30</div></div>
+            <div><div class="k">Business Purpose</div><div class="v">Client Visit · Existing Account</div></div>
+            <div><div class="k">Cost Center</div><div class="v">CC-4120 Field Sales / NA</div></div>
+            <div><div class="k">Total</div><div class="v" style="color: var(--wd-blue);">$0.00</div></div>
+          </div>
+          <div class="lines-card">
+            <div class="lh">Expense Lines
+              <button class="add-line hl" id="addLineBtn">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add
+              </button>
+            </div>
+            <div class="empty-lines">
+              <div class="receipt-art"></div>
+              <strong>No expense lines yet</strong>
+              Click <em>Add</em> to create a line, or drag receipts here to auto-match.
+            </div>
+          </div>
+          <div class="approval-rail" style="opacity: 0.55;">
+            <span class="step-label-mini">Approval routing — <strong>preview</strong>:</span>
+            <span class="step-dot" style="background: #d8dee5; box-shadow: none;"></span>
+            <span class="step-bar" style="background: #d8dee5;"></span>
+            <span class="step-label-mini">Manager → AP Specialist → Reimbursement</span>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">4</span>
+        Workday creates draft <strong>EXP-2026-0231</strong>. The report is empty — click <strong>Add</strong> to enter your first expense line.
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — EXPENSE LINE FORM (HOTEL + RECEIPT) ============ -->
+    <div class="screen" data-step="5">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>New Expense Line</h2>
+              <span class="crumb">› EXP-2026-0231 · Hotel</span>
+            </div>
+          </div>
+          <div class="ef-grid">
+            <div class="form-section">
+              <h4>Line Details</h4>
+              <div class="field-row">
+                <div class="field">
+                  <label>Date <span class="req">*</span></label>
+                  <div class="input">04 / 28 / 2026</div>
+                </div>
+                <div class="field">
+                  <label>Expense Item <span class="req">*</span></label>
+                  <div class="select focused">Hotel — Lodging</div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Merchant <span class="req">*</span></label>
+                <div class="input changed" id="merchantField">
+                  <span class="reveal-new r1" style="--target-w: 24ch;">Marriott Downtown Chicago</span>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Quantity (nights) <span class="req">*</span></label>
+                  <div class="input changed">2</div>
+                </div>
+                <div class="field">
+                  <label>Per-Unit Amount <span class="req">*</span></label>
+                  <div class="input changed">$189.50</div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Subtotal</label>
+                  <div class="input" style="background:#f3f6fa; font-weight:700;">$379.00</div>
+                </div>
+                <div class="field">
+                  <label>Tax</label>
+                  <div class="input" style="background:#f3f6fa;">$58.74</div>
+                </div>
+              </div>
+              <div class="field">
+                <label>Description</label>
+                <div class="input changed" id="descField">
+                  <span class="reveal-new r2" style="--target-w: 36ch;">2 nights, single occupancy. Tax rate 15.5% (City + IL state)</span>
+                </div>
+                <div class="helper amber">Required for line items over $50 in Hotel category.</div>
+              </div>
+            </div>
+            <div class="form-section">
+              <h4>Receipt</h4>
+              <div class="receipt-drop uploaded" id="receiptDrop">
+                <div class="receipt-thumb">
+                  <div class="rt-line"></div>
+                  <div class="rt-line"></div>
+                  <div class="rt-line"></div>
+                  <div class="rt-line"></div>
+                  <div class="rt-total"><span>TOTAL</span><span>$437.74</span></div>
+                </div>
+                <div class="filename">marriott-chi-04-30-2026.pdf</div>
+                <div class="filemeta">312 KB · Uploaded · OCR matched</div>
+                <div class="helper green" style="margin-top: 4px;">Workday extracted: $437.74 · 04/28-04/30 · Marriott (auto-filled fields above)</div>
+              </div>
+              <div class="field" style="margin-top: 10px;">
+                <label>Receipt Included <span class="req">*</span></label>
+                <div class="select" style="background: rgba(46,133,64,0.08);">Yes — Attached above</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-footer">
+            <span class="save-note">Tip: Drop a PDF/JPG receipt and Workday will OCR-fill amount, date, and merchant.</span>
+            <div class="right">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-ghost">Save &amp; Add Another</button>
+              <button class="btn-primary" id="saveLine5">Done</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">5</span>
+        Pick an <strong>Expense Item</strong>, enter the merchant and amount, and attach a receipt. Workday OCR auto-fills the date and total.
+      </div>
+    </div>
+
+    <!-- ============ STEP 6 — LINES SUMMARY (3 LINES) ============ -->
+    <div class="screen" data-step="6">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="er-shell">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Expense Report — EXP-2026-0231</h2>
+              <span class="crumb">› Draft · 3 lines · ready to review</span>
+            </div>
+            <div class="actions">
+              <button class="btn-cancel">Save for Later</button>
+              <button class="btn-ghost">Review</button>
+            </div>
+          </div>
+          <div class="er-meta">
+            <div><div class="k">Memo</div><div class="v">Austin → Chicago client trip — Apr 28-30</div></div>
+            <div><div class="k">Business Purpose</div><div class="v">Client Visit · Existing Account</div></div>
+            <div><div class="k">Cost Center</div><div class="v">CC-4120 Field Sales / NA</div></div>
+            <div><div class="k">Total</div><div class="v" style="color: var(--wd-blue);">$671.84</div></div>
+          </div>
+          <div class="lines-card">
+            <div class="lh">Expense Lines
+              <button class="add-line">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                Add Line
+              </button>
+            </div>
+            <table class="lines-table">
+              <thead>
+                <tr>
+                  <th>Date</th><th>Expense Item</th><th>Merchant</th><th>Qty</th><th>Receipt</th><th style="text-align:right;">Amount</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>04 / 28 / 2026</td>
+                  <td><span class="item-pill pill-hotel"><span class="dot"></span>Hotel — Lodging</span></td>
+                  <td>Marriott Downtown Chicago</td>
+                  <td>2 nights</td>
+                  <td><span class="receipt-tag">Attached</span></td>
+                  <td class="amt">$437.74</td>
+                </tr>
+                <tr>
+                  <td>04 / 29 / 2026</td>
+                  <td><span class="item-pill pill-meal"><span class="dot"></span>Meals — Client</span></td>
+                  <td>Avec Restaurant</td>
+                  <td>1 invoice</td>
+                  <td><span class="receipt-tag">Attached</span></td>
+                  <td class="amt">$148.20</td>
+                </tr>
+                <tr>
+                  <td>04 / 30 / 2026</td>
+                  <td><span class="item-pill pill-mile"><span class="dot"></span>Mileage — Personal Car</span></td>
+                  <td>—  ATX&nbsp;⇄&nbsp;ORD route</td>
+                  <td>128 mi</td>
+                  <td><span class="receipt-tag" style="background:rgba(8,117,225,0.14); color: var(--wd-blue);">N/A</span></td>
+                  <td class="amt">$85.90</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="totals-strip">
+              <div class="lbl">Subtotal</div>           <div class="val">$613.10</div>
+              <div class="lbl">Tax</div>                <div class="val">$58.74</div>
+              <div class="grand lbl">Total Reimbursable</div><div class="grand val">$671.84</div>
+            </div>
+          </div>
+          <div class="approval-rail">
+            <span class="step-label-mini"><strong>Approval routing</strong>:</span>
+            <span class="step-dot"></span>
+            <span class="step-bar"></span>
+            <span class="step-label-mini">Manager (Priya Shah) → AP Specialist → Reimbursement (next pay run)</span>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">6</span>
+        All three lines roll up to a <strong>$671.84</strong> total. The approval rail previews who'll review the report once you submit.
+      </div>
+    </div>
+
+    <!-- ============ STEP 7 — SUBMIT ============ -->
+    <div class="screen" data-step="7">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="er-shell">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Expense Report — EXP-2026-0231</h2>
+              <span class="crumb">› Ready to Submit</span>
+            </div>
+            <div class="actions">
+              <button class="btn-cancel">Save for Later</button>
+              <button class="btn-primary" id="submitBtn7">Submit</button>
+            </div>
+          </div>
+          <div class="er-meta">
+            <div><div class="k">Memo</div><div class="v">Austin → Chicago client trip — Apr 28-30</div></div>
+            <div><div class="k">Business Purpose</div><div class="v">Client Visit · Existing Account</div></div>
+            <div><div class="k">Lines</div><div class="v">3 (1 Hotel · 1 Meals · 1 Mileage)</div></div>
+            <div><div class="k">Total</div><div class="v" style="color: var(--wd-blue); font-size: 14px;">$671.84</div></div>
+          </div>
+          <div class="lines-card">
+            <div class="lh" style="background: rgba(46,133,64,0.08); color: var(--wd-green);">
+              All checks passed
+              <span style="margin-left:auto; font-size:11px; color: var(--wd-muted); text-transform: none; letter-spacing: 0;">
+                Receipts attached · Per-diem within policy · Cost center valid
+              </span>
+            </div>
+            <div style="padding: 14px 18px; font-size: 12px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px;">
+              <div>
+                <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--wd-muted); font-weight: 700;">Receipt audit</div>
+                <div style="margin-top: 4px;">2 receipts attached, 1 mileage line (no receipt required).</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--wd-muted); font-weight: 700;">Per-diem &amp; mileage</div>
+                <div style="margin-top: 4px;">Hotel under $250/night cap. Mileage rate $0.67/mi.</div>
+              </div>
+              <div>
+                <div style="font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--wd-muted); font-weight: 700;">Allocations</div>
+                <div style="margin-top: 4px;">100% to CC-4120 · Customer: Northwind Logistics</div>
+              </div>
+            </div>
+          </div>
+          <div class="approval-rail">
+            <span class="step-label-mini"><strong>Routes to</strong>:</span>
+            <span class="step-dot"></span>
+            <span class="step-bar"></span>
+            <span class="step-label-mini">Priya Shah (Manager) — typically responds in 1.4 days</span>
+          </div>
+          <div class="toast" id="toastSubmitted"><div class="check">✓</div>Expense report submitted for approval.</div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">7</span>
+        Review the validation summary — receipts, per-diem caps, allocations — then click <strong>Submit</strong>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 8 — CONFIRMATION ============ -->
+    <div class="screen" data-step="8">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="confirm-screen">
+          <div class="check-big">✓</div>
+          <h2>Expense report submitted</h2>
+          <p>Workday saved <strong>EXP-2026-0231</strong> and routed it to your manager for approval. You'll get a notification once it's approved and reimbursement is scheduled to the next pay run.</p>
+          <div class="summary-card">
+            <h4>EXP-2026-0231 · Submitted May 6, 2026</h4>
+            <div class="summary-row">
+              <div class="k">1.</div>
+              <div class="desc">Hotel — Marriott Downtown Chicago · 2 nights</div>
+              <div class="amt">$437.74</div>
+            </div>
+            <div class="summary-row">
+              <div class="k">2.</div>
+              <div class="desc">Meals — Avec Restaurant (client dinner)</div>
+              <div class="amt">$148.20</div>
+            </div>
+            <div class="summary-row">
+              <div class="k">3.</div>
+              <div class="desc">Mileage — Personal car · 128 mi @ $0.67/mi</div>
+              <div class="amt">$85.90</div>
+            </div>
+            <div class="summary-grand">
+              <div>Total Reimbursable</div>
+              <div class="v">$671.84</div>
+            </div>
+          </div>
+          <div class="approval-line">
+            <div class="dot"></div>
+            Awaiting Priya Shah (Manager) · Then AP Specialist · Reimbursed via the next pay run
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">8</span>
+        All done. Workday confirms the report, routes it for approval, and queues reimbursement to your next paycheck.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  <p>Tutorial reproduces a typical Workday Worker self-service flow for creating and submitting an expense report. Field labels (e.g. "Memo", "Business Purpose", "Expense Item", "Quantity", "Per-Unit Amount") and the Header → Lines → Submit pattern follow Workday's published task layout. Specific receipt-OCR auto-fill behavior, per-diem caps, mileage rates, and approval routing are tenant-configurable. Sources: Workday Community help articles "Create Expense Report" and "Add Expense Lines", and university job aids (e.g., Yale, Cornell, GMU Workday training pages).</p>
+</footer>
+
+<script>
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const TOTAL = screens.length;
+  const stepLabel = document.getElementById('stepLabel');
+  const cursor = document.getElementById('cursor');
+  const playBtn = document.getElementById('playBtn');
+
+  let current = 0;
+  let playing = true;
+  let timer = null;
+  let cursorTimers = [];
+
+  // Duration per step in ms
+  const DURATIONS = [3800, 4400, 5400, 4400, 5800, 5200, 5400, 5200];
+
+  function clearCursorTimers() {
+    cursorTimers.forEach(t => clearTimeout(t));
+    cursorTimers = [];
+  }
+
+  function moveCursorTo(x, y, clickAfter = true) {
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    if (clickAfter) {
+      const t = setTimeout(() => {
+        cursor.classList.add('click');
+        const t2 = setTimeout(() => cursor.classList.remove('click'), 520);
+        cursorTimers.push(t2);
+      }, 720);
+      cursorTimers.push(t);
+    }
+  }
+
+  function offsetInStage(el) {
+    const stage = document.getElementById('stage');
+    const sr = stage.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return { x: er.left - sr.left + er.width / 2 - 11, y: er.top - sr.top + er.height / 2 - 11 };
+  }
+
+  function showTimedToast(screen, id, delay = 1400) {
+    const toast = screen.querySelector('#' + id);
+    if (!toast) return;
+    const t = setTimeout(() => toast.classList.add('show'), delay);
+    cursorTimers.push(t);
+  }
+
+  function animateStep(i) {
+    clearCursorTimers();
+    cursor.style.left = '-40px';
+    cursor.style.top = '-40px';
+
+    document.querySelectorAll('.toast.show').forEach(t => t.classList.remove('show'));
+
+    const screen = screens[i];
+    const t = setTimeout(() => {
+      switch (i) {
+        case 0: {
+          const el = screen.querySelector('#expenseTile');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 1: {
+          const el = screen.querySelector('#createER');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 2: {
+          // park on memo briefly, then move to OK
+          const memo = screen.querySelector('#memoField');
+          if (memo) { const p = offsetInStage(memo); moveCursorTo(p.x, p.y, false); }
+          const t2 = setTimeout(() => {
+            const ok = screen.querySelector('#okHeader');
+            if (ok) { const q = offsetInStage(ok); moveCursorTo(q.x, q.y); }
+          }, 3000);
+          cursorTimers.push(t2);
+          break;
+        }
+        case 3: {
+          const el = screen.querySelector('#addLineBtn');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 4: {
+          // hover merchant field, then move to receipt drop, then Done
+          const merchant = screen.querySelector('#merchantField');
+          if (merchant) { const p = offsetInStage(merchant); moveCursorTo(p.x, p.y, false); }
+          const t2 = setTimeout(() => {
+            const r = screen.querySelector('#receiptDrop');
+            if (r) { const q = offsetInStage(r); moveCursorTo(q.x, q.y, false); }
+          }, 2200);
+          const t3 = setTimeout(() => {
+            const ok = screen.querySelector('#saveLine5');
+            if (ok) { const q = offsetInStage(ok); moveCursorTo(q.x, q.y); }
+          }, 4200);
+          cursorTimers.push(t2, t3);
+          break;
+        }
+        case 5: {
+          // park cursor without click — survey screen
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+        case 6: {
+          const ok = screen.querySelector('#submitBtn7');
+          if (ok) { const p = offsetInStage(ok); moveCursorTo(p.x, p.y); }
+          showTimedToast(screen, 'toastSubmitted', 1900);
+          break;
+        }
+        case 7: {
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+      }
+    }, 250);
+    cursorTimers.push(t);
+  }
+
+  function showStep(i) {
+    current = ((i % TOTAL) + TOTAL) % TOTAL;
+    screens.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    stepLabel.textContent = `Step ${current + 1} / ${TOTAL}`;
+    animateStep(current);
+  }
+
+  function tick() {
+    if (!playing) return;
+    const dur = DURATIONS[current] || 4000;
+    timer = setTimeout(() => {
+      showStep(current + 1);
+      tick();
+    }, dur);
+  }
+
+  function stopTick() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  function togglePlay() {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    if (playing) tick();
+    else stopTick();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    stopTick(); showStep(0); if (playing) tick();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    stopTick(); showStep(current - 1); if (playing) tick();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    stopTick(); showStep(current + 1); if (playing) tick();
+  });
+
+  showStep(0);
+  tick();
+</script>
+
+</body>
+</html>

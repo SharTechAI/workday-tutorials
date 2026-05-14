@@ -1,0 +1,1143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Workday HRM Tutorial — View &amp; Download Payslip (2026-05-04)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --wd-orange: #f38b00;
+    --wd-blue:   #0875e1;
+    --wd-navy:   #152935;
+    --wd-bg:     #f2f4f7;
+    --wd-line:   #dadde2;
+    --wd-text:   #25313d;
+    --wd-muted:  #6b7684;
+    --wd-green:  #2e8540;
+    --wd-amber:  #b8860b;
+    --wd-red:    #b1342f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--wd-text); background: #101418; }
+
+  header.page {
+    padding: 18px 24px; background: #0b0f13; color: #fff;
+    border-bottom: 1px solid #1d242c;
+  }
+  header.page h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  header.page p { margin: 0; font-size: 13px; color: #9aa6b2; }
+  header.page .badge {
+    display: inline-block; background: var(--wd-orange); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 8px; letter-spacing: 0.4px;
+  }
+
+  .stage-wrap { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #cdd4dc; font-size: 13px;
+  }
+  .controls button {
+    background: var(--wd-blue); color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.secondary { background: #334352; }
+  .step-label { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    background: var(--wd-bg); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    border: 1px solid #1d242c;
+  }
+  .screen {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity 420ms ease;
+  }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  /* ---------- Workday chrome ---------- */
+  .wd-topbar {
+    height: 48px; background: var(--wd-navy); color: #fff;
+    display: flex; align-items: center; padding: 0 14px; gap: 14px;
+    font-size: 13px;
+  }
+  .wd-topbar .menu-icon {
+    width: 22px; height: 16px; display: inline-flex; flex-direction: column; justify-content: space-between;
+  }
+  .wd-topbar .menu-icon span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+  .wd-topbar .logo { font-weight: 700; letter-spacing: 0.5px; color: var(--wd-orange); }
+  .wd-topbar .search {
+    flex: 1; max-width: 420px; background: #24333f; border-radius: 3px; padding: 6px 10px; color: #aeb8c3; font-size: 12px;
+  }
+  .wd-topbar .right { margin-left: auto; display: flex; gap: 12px; align-items: center; color: #c8d2dc; }
+  .wd-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#ffb46b,#f38b00);
+    display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .wd-body { position: absolute; top: 48px; bottom: 0; left: 0; right: 0; overflow: hidden; }
+
+  /* ---------- Home dashboard ---------- */
+  .dashboard {
+    padding: 24px 28px; background: linear-gradient(#f7f9fc, #eef2f7); height: 100%;
+  }
+  .dash-hello { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .dash-sub { color: var(--wd-muted); font-size: 13px; margin: 0 0 22px; }
+  .apps-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .app-tile {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 10px; text-align: center; font-size: 12px; color: var(--wd-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); cursor: pointer;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .app-tile.hl { border-color: var(--wd-blue); box-shadow: 0 0 0 2px rgba(8,117,225,0.15); }
+  .app-tile .icon {
+    width: 34px; height: 34px; border-radius: 8px; margin: 0 auto 8px;
+    display: grid; place-items: center; color: #fff; font-size: 16px; font-weight: 700;
+  }
+  .ic-absence  { background: #2a8fbd; }
+  .ic-pay      { background: #6a4fb6; }
+  .ic-time     { background: #2e8540; }
+  .ic-benefits { background: #b65c24; }
+  .ic-learning { background: #0875e1; }
+  .ic-career   { background: #c23878; }
+
+  /* ---------- Pay landing ---------- */
+  .pay-landing { padding: 22px 28px; background: #fff; height: 100%; overflow: hidden; }
+  .page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .page-title h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .page-title .crumb { color: var(--wd-muted); font-size: 12px; }
+
+  .pay-cols {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 18px; height: calc(100% - 50px);
+  }
+  .pay-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .pay-card h3 {
+    margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--wd-line);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700; background: #fafbfc;
+  }
+  .menu-list { display: flex; flex-direction: column; }
+  .menu-list .item {
+    padding: 12px 16px; border-bottom: 1px solid var(--wd-line);
+    font-size: 13px; display: flex; align-items: center; gap: 10px;
+    color: var(--wd-blue); cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .menu-list .item:last-child { border-bottom: none; }
+  .menu-list .item:hover, .menu-list .item.hl {
+    background: #eaf4ff;
+  }
+  .menu-list .item .ic {
+    width: 22px; height: 22px; border-radius: 4px; flex-shrink: 0;
+    background: rgba(8,117,225,0.12);
+    display: grid; place-items: center; color: var(--wd-blue);
+    font-size: 12px; font-weight: 700;
+  }
+  .menu-list .item .label { flex: 1; }
+  .menu-list .item .meta { color: var(--wd-muted); font-size: 11px; }
+
+  .pay-summary { padding: 16px; font-size: 13px; }
+  .pay-summary .net {
+    font-size: 30px; font-weight: 700; color: var(--wd-text); margin: 4px 0 2px;
+  }
+  .pay-summary .net-meta { color: var(--wd-muted); font-size: 12px; margin-bottom: 14px; }
+  .pay-summary .pair {
+    display: flex; justify-content: space-between; padding: 7px 0;
+    border-bottom: 1px dashed var(--wd-line); font-size: 12px;
+  }
+  .pay-summary .pair:last-child { border-bottom: none; font-weight: 700; }
+  .pay-summary .pair .k { color: var(--wd-muted); }
+  .pay-summary .pair .v { font-variant-numeric: tabular-nums; }
+
+  /* ---------- Payslips list ---------- */
+  .slip-list-screen { padding: 22px 28px; background: #fff; height: 100%; overflow: hidden; }
+  .filters {
+    display: flex; gap: 8px; margin-bottom: 12px; align-items: center;
+  }
+  .filters .chip {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 999px;
+    padding: 5px 12px; font-size: 12px; color: var(--wd-text);
+  }
+  .filters .chip.active { background: rgba(8,117,225,0.08); border-color: var(--wd-blue); color: var(--wd-blue); font-weight: 600; }
+  .filters .right { margin-left: auto; color: var(--wd-muted); font-size: 12px; }
+
+  .slip-table {
+    border: 1px solid var(--wd-line); border-radius: 6px; overflow: hidden;
+    background: #fff;
+  }
+  .slip-table .row {
+    display: grid; grid-template-columns: 130px 1fr 110px 110px 110px 90px;
+    gap: 0; padding: 10px 14px; border-bottom: 1px solid var(--wd-line); font-size: 12px;
+    align-items: center;
+    transition: background 150ms ease;
+  }
+  .slip-table .row:last-child { border-bottom: none; }
+  .slip-table .row.head {
+    background: #fafbfc; font-weight: 600; color: var(--wd-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; font-size: 10px;
+  }
+  .slip-table .row.target {
+    background: #eaf4ff; box-shadow: inset 3px 0 0 var(--wd-blue);
+  }
+  .slip-table .row .view-link {
+    color: var(--wd-blue); cursor: pointer; font-weight: 600;
+  }
+  .slip-table .row .amount { font-variant-numeric: tabular-nums; }
+  .slip-table .row .pill {
+    display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 999px;
+    background: rgba(46,133,64,0.12); color: var(--wd-green); font-weight: 700;
+  }
+
+  /* ---------- Payslip detail ---------- */
+  .slip-detail { padding: 18px 28px; background: #fff; height: 100%; overflow: hidden; display: grid; grid-template-rows: auto 1fr; gap: 12px; }
+  .slip-toolbar {
+    display: flex; gap: 8px; align-items: center;
+    padding: 8px 0;
+  }
+  .slip-toolbar .crumb-row { display: flex; align-items: center; gap: 8px; }
+  .slip-toolbar .crumb-row h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .slip-toolbar .crumb-row .crumb { color: var(--wd-muted); font-size: 12px; }
+  .slip-toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .btn-primary {
+    background: var(--wd-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 3px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:disabled { background: #b9c5d1; cursor: default; }
+  .btn-ghost {
+    background: #fff; color: var(--wd-blue); border: 1px solid var(--wd-blue);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  .slip-grid {
+    display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; min-height: 0;
+  }
+  .slip-panel {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column; min-height: 0;
+  }
+  .slip-panel .ph {
+    padding: 10px 14px; background: #fafbfc; border-bottom: 1px solid var(--wd-line);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700;
+  }
+  .slip-panel .pb {
+    padding: 6px 0; overflow: auto; font-size: 12px;
+  }
+  .pp-row {
+    display: grid; grid-template-columns: 1fr 90px 90px;
+    padding: 7px 14px; border-bottom: 1px dashed var(--wd-line);
+    align-items: center;
+  }
+  .pp-row:last-child { border-bottom: none; }
+  .pp-row.tot {
+    font-weight: 700; background: #f6f8fa; border-top: 2px solid var(--wd-line); border-bottom: none;
+  }
+  .pp-row .num { font-variant-numeric: tabular-nums; text-align: right; }
+  .pp-row .lbl { color: var(--wd-text); }
+  .pp-row .cur { color: var(--wd-muted); font-size: 11px; }
+
+  .net-banner {
+    background: linear-gradient(135deg, #0875e1, #1f8be8); color: #fff;
+    padding: 14px 18px; border-radius: 6px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .net-banner .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px; opacity: 0.9; }
+  .net-banner .v { font-size: 26px; font-weight: 700; line-height: 1.1; }
+  .net-banner .meta { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+  .net-banner .right { margin-left: auto; text-align: right; font-size: 12px; opacity: 0.9; }
+
+  .header-meta {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+    padding: 12px 14px; background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 6px;
+    margin-bottom: 10px; font-size: 12px;
+  }
+  .header-meta .cell .k { color: var(--wd-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .header-meta .cell .v { font-weight: 600; margin-top: 2px; }
+
+  /* ---------- Modal (Print Payslip) ---------- */
+  .modal-overlay {
+    position: absolute; inset: 0; background: rgba(14,20,28,0.45);
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; transition: opacity 320ms ease; pointer-events: none;
+  }
+  .screen.active .modal-overlay.show { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: #fff; border-radius: 6px; width: 480px; max-width: 92%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.35); overflow: hidden;
+    transform: translateY(10px); transition: transform 320ms ease;
+  }
+  .screen.active .modal-overlay.show .modal { transform: translateY(0); }
+  .modal-head {
+    padding: 14px 18px; border-bottom: 1px solid var(--wd-line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .modal-head h3 { margin: 0; font-size: 15px; font-weight: 600; }
+  .modal-head .close { margin-left: auto; color: var(--wd-muted); cursor: pointer; font-size: 18px; }
+  .modal-body { padding: 16px 18px; font-size: 13px; }
+  .modal-footer {
+    padding: 12px 18px; border-top: 1px solid var(--wd-line);
+    display: flex; gap: 8px; justify-content: flex-end; background: #fafbfc;
+  }
+  .modal .helper { font-size: 12px; color: var(--wd-muted); margin-top: 6px; line-height: 1.45; }
+
+  .radio-group { display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+  .radio {
+    display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px;
+    border: 1px solid var(--wd-line); border-radius: 4px; cursor: pointer;
+    transition: border-color 150ms ease, background 150ms ease;
+  }
+  .radio.sel { border-color: var(--wd-blue); background: #eaf4ff; }
+  .radio .dot {
+    width: 16px; height: 16px; border-radius: 50%; border: 2px solid var(--wd-line);
+    flex-shrink: 0; margin-top: 1px; position: relative;
+  }
+  .radio.sel .dot { border-color: var(--wd-blue); }
+  .radio.sel .dot::after {
+    content: ""; position: absolute; inset: 2px; border-radius: 50%; background: var(--wd-blue);
+  }
+  .radio .txt { font-size: 13px; }
+  .radio .txt b { display: block; margin-bottom: 2px; }
+  .radio .txt span { color: var(--wd-muted); font-size: 12px; }
+
+  /* ---------- PDF preview / generation ---------- */
+  .pdf-screen {
+    height: 100%; background: #2a3340; padding: 16px 28px;
+    display: grid; grid-template-rows: auto 1fr; gap: 12px; overflow: hidden;
+  }
+  .pdf-bar {
+    display: flex; align-items: center; gap: 10px; color: #d9e0e8; font-size: 13px;
+  }
+  .pdf-bar .file {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: #1f2731; border-radius: 4px; padding: 6px 12px; color: #fff;
+  }
+  .pdf-bar .file .fi {
+    width: 20px; height: 24px; border-radius: 2px; background: #e8413a;
+    color: #fff; font-size: 9px; font-weight: 700; display: grid; place-items: center;
+  }
+  .pdf-bar .actions { margin-left: auto; display: flex; gap: 8px; }
+  .pdf-bar .btn-pdf {
+    background: #1f2731; border: 1px solid #38424f; color: #d9e0e8;
+    padding: 6px 12px; border-radius: 3px; font-size: 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+
+  .pdf-page-wrap {
+    overflow: auto; display: flex; align-items: flex-start; justify-content: center;
+    padding: 8px;
+  }
+  .pdf-page {
+    width: 720px; max-width: 100%; aspect-ratio: 8.5 / 11;
+    background: #fff; border-radius: 4px;
+    box-shadow: 0 10px 28px rgba(0,0,0,0.6);
+    padding: 32px 36px;
+    color: #1d2530;
+    display: flex; flex-direction: column;
+    transform: translateY(40px); opacity: 0;
+    animation: pdfIn 600ms ease 200ms forwards;
+  }
+  @keyframes pdfIn {
+    to { transform: translateY(0); opacity: 1; }
+  }
+  .pdf-page.scan-overlay { position: relative; overflow: hidden; }
+  .pdf-page.scan-overlay::after {
+    content: ""; position: absolute; left: 0; right: 0; height: 60%;
+    background: linear-gradient(to bottom, rgba(8,117,225,0) 0%, rgba(8,117,225,0.18) 50%, rgba(8,117,225,0) 100%);
+    animation: scan 1.6s linear infinite;
+  }
+  @keyframes scan {
+    0%   { top: -40%; }
+    100% { top: 100%; }
+  }
+
+  .pdf-page .pdf-head { display: flex; align-items: flex-start; gap: 12px; border-bottom: 2px solid var(--wd-navy); padding-bottom: 10px; }
+  .pdf-page .pdf-head .co {
+    width: 38px; height: 38px; background: var(--wd-navy); color: var(--wd-orange);
+    display: grid; place-items: center; border-radius: 4px; font-weight: 700; font-size: 14px;
+  }
+  .pdf-page .pdf-head .ttl { flex: 1; }
+  .pdf-page .pdf-head h4 { margin: 0; font-size: 15px; }
+  .pdf-page .pdf-head .sub { color: var(--wd-muted); font-size: 11px; margin-top: 2px; }
+  .pdf-page .pdf-head .right { text-align: right; font-size: 11px; color: var(--wd-muted); }
+  .pdf-page .pdf-head .right b { color: var(--wd-text); display: block; font-size: 13px; }
+
+  .pdf-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 12px 0 14px; font-size: 11px; }
+  .pdf-meta .cell .k { color: var(--wd-muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pdf-meta .cell .v { font-weight: 600; margin-top: 1px; font-size: 12px; }
+
+  .pdf-section { margin-bottom: 12px; }
+  .pdf-section .sh { font-size: 10px; text-transform: uppercase; letter-spacing: 0.6px; color: var(--wd-muted); padding-bottom: 4px; border-bottom: 1px solid var(--wd-line); margin-bottom: 4px; }
+  .pdf-section .row { display: grid; grid-template-columns: 1fr 80px 80px; padding: 3px 0; font-size: 11px; }
+  .pdf-section .row.tot { font-weight: 700; border-top: 1px solid var(--wd-line); padding-top: 4px; margin-top: 2px; }
+  .pdf-section .row .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+  .pdf-totals {
+    margin-top: auto; padding: 8px 10px; background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 4px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 11px;
+  }
+  .pdf-totals .cell .k { color: var(--wd-muted); font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pdf-totals .cell .v { font-weight: 700; margin-top: 1px; font-size: 13px; }
+  .pdf-totals .cell .v.green { color: var(--wd-green); font-size: 16px; }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: absolute; left: 50%; bottom: 70px; transform: translate(-50%, 20px);
+    background: var(--wd-navy); color: #fff; padding: 10px 16px;
+    border-radius: 6px; font-size: 13px; box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+    display: flex; align-items: center; gap: 10px;
+    opacity: 0; transition: opacity 320ms ease, transform 320ms ease;
+    border-left: 4px solid var(--wd-green);
+    z-index: 30;
+  }
+  .screen.active .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast .check { width: 22px; height: 22px; border-radius: 50%; background: var(--wd-green); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+
+  /* ---------- Confirmation ---------- */
+  .confirm-screen {
+    padding: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; background: #fff; height: 100%;
+  }
+  .check-big {
+    width: 78px; height: 78px; border-radius: 50%; background: var(--wd-green);
+    color: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(46,133,64,0.3);
+    animation: pop 600ms ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .confirm-screen h2 { margin: 16px 0 6px; font-size: 22px; }
+  .confirm-screen p  { margin: 0; color: var(--wd-muted); font-size: 13px; max-width: 520px; }
+  .receipt {
+    margin-top: 22px; background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 18px; min-width: 380px; text-align: left;
+  }
+  .receipt .summary-row {
+    display: flex; justify-content: space-between; font-size: 12px;
+    padding: 6px 0; border-bottom: 1px dashed var(--wd-line);
+  }
+  .receipt .summary-row:last-child { border-bottom: none; }
+  .receipt .summary-row .k { color: var(--wd-muted); }
+  .file-chip {
+    margin-top: 14px; display: inline-flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: #f3f6fa; border: 1px solid var(--wd-line); border-radius: 4px;
+    font-size: 12px;
+  }
+  .file-chip .fi {
+    width: 18px; height: 22px; background: #e8413a; border-radius: 2px;
+    color: #fff; font-size: 8px; font-weight: 700; display: grid; place-items: center;
+  }
+
+  /* ---------- Cursor ---------- */
+  .cursor {
+    position: absolute; width: 22px; height: 22px; z-index: 50;
+    left: -40px; top: -40px;
+    pointer-events: none;
+    transition: left 700ms cubic-bezier(0.22, 0.61, 0.36, 1), top 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  .cursor.click::after {
+    content: ""; position: absolute; left: 2px; top: 2px; width: 22px; height: 22px;
+    border-radius: 50%; border: 2px solid rgba(8,117,225,0.6);
+    animation: ring 500ms ease-out;
+  }
+  @keyframes ring {
+    0%   { transform: scale(0.4); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ---------- Narration ---------- */
+  .narration {
+    position: absolute; left: 16px; bottom: 16px; right: 16px;
+    background: rgba(21,41,53,0.94); color: #fff; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; line-height: 1.4;
+    display: flex; align-items: flex-start; gap: 10px;
+    border-left: 4px solid var(--wd-orange);
+    z-index: 40;
+  }
+  .narration .n {
+    background: var(--wd-orange); color: #fff; font-weight: 700; font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+
+  footer.page {
+    max-width: 1100px; margin: 14px auto 40px; padding: 0 16px;
+    color: #8b97a3; font-size: 12px; line-height: 1.5;
+  }
+  footer.page a { color: #9ec3ea; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1><span class="badge">Workday HRM</span> View &amp; Download Payslip — Animated Walkthrough</h1>
+  <p>Daily tutorial · 2026-05-04 · Based on public Workday documentation and partner-published job aids.</p>
+</header>
+
+<div class="stage-wrap">
+  <div class="controls">
+    <button id="playBtn">Pause</button>
+    <button class="secondary" id="restartBtn">Restart</button>
+    <button class="secondary" id="prevBtn">&lsaquo; Prev</button>
+    <button class="secondary" id="nextBtn">Next &rsaquo;</button>
+    <div class="step-label" id="stepLabel">Step 1 / 8</div>
+  </div>
+
+  <div class="stage" id="stage">
+
+    <!-- Cursor overlay -->
+    <div class="cursor" id="cursor">
+      <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2 L2 18 L7 14 L10 20 L13 19 L10 13 L17 13 Z" fill="#ffffff" stroke="#152935" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- ============ STEP 1 — HOME DASHBOARD ============ -->
+    <div class="screen" data-step="1">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right">
+          <span>Inbox</span><span>Notifications</span>
+          <div class="wd-avatar">JM</div>
+        </div>
+      </div>
+      <div class="wd-body">
+        <div class="dashboard">
+          <h2 class="dash-hello">Good morning, Jordan</h2>
+          <p class="dash-sub">Monday, May 4, 2026 · Your most recent payslip posted Friday — let's open it.</p>
+          <div class="apps-grid">
+            <div class="app-tile"><div class="icon ic-absence">A</div>Absence</div>
+            <div class="app-tile" id="payTile"><div class="icon ic-pay">$</div>Pay</div>
+            <div class="app-tile"><div class="icon ic-time">T</div>Time</div>
+            <div class="app-tile"><div class="icon ic-benefits">B</div>Benefits</div>
+            <div class="app-tile"><div class="icon ic-learning">L</div>Learning</div>
+            <div class="app-tile"><div class="icon ic-career">C</div>Career</div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">1</span>
+        From your Workday home, click the <strong>Pay</strong> app tile to reach payslips, tax documents, and payment elections.
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 — PAY LANDING ============ -->
+    <div class="screen" data-step="2">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="pay-landing">
+          <div class="page-title">
+            <h2>Pay</h2>
+            <span class="crumb">› Worker Hub</span>
+          </div>
+          <div class="pay-cols">
+            <div class="pay-card">
+              <h3>View</h3>
+              <div class="menu-list">
+                <div class="item" id="payslipsLink"><div class="ic">$</div><span class="label">Payslips</span><span class="meta">12 available</span></div>
+                <div class="item"><div class="ic">B</div><span class="label">Bonus &amp; One-Time Payments</span><span class="meta">3 in 2026</span></div>
+                <div class="item"><div class="ic">T</div><span class="label">Tax Documents</span><span class="meta">2025 W-2 ready</span></div>
+                <div class="item"><div class="ic">D</div><span class="label">Total Rewards Statement</span><span class="meta">FY25</span></div>
+              </div>
+            </div>
+            <div class="pay-card">
+              <h3>Tasks</h3>
+              <div class="pay-summary">
+                <div class="lbl" style="font-size:11px;color:var(--wd-muted);text-transform:uppercase;letter-spacing:0.6px;">Last Payslip · Net Pay</div>
+                <div class="net">$3,418.62</div>
+                <div class="net-meta">May 1, 2026 · Pay Period Apr 16 – Apr 30</div>
+                <div class="pair"><span class="k">Gross Pay</span><span class="v">$5,134.62</span></div>
+                <div class="pair"><span class="k">Pre-Tax Deductions</span><span class="v">−$612.40</span></div>
+                <div class="pair"><span class="k">Federal &amp; State Taxes</span><span class="v">−$1,026.10</span></div>
+                <div class="pair"><span class="k">Post-Tax Deductions</span><span class="v">−$77.50</span></div>
+                <div class="pair"><span class="k">Net Pay (Direct Deposit)</span><span class="v">$3,418.62</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">2</span>
+        The Pay worker hub opens. Under <strong>View</strong>, click <strong>Payslips</strong> to see every issued payslip.
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 — PAYSLIPS LIST ============ -->
+    <div class="screen" data-step="3">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="slip-list-screen">
+          <div class="page-title">
+            <h2>Payslips</h2>
+            <span class="crumb">› Pay › View</span>
+          </div>
+          <div class="filters">
+            <span class="chip active">2026</span>
+            <span class="chip">2025</span>
+            <span class="chip">2024</span>
+            <span class="chip">All Years</span>
+            <span class="right">Showing 9 payslips · Sorted by Pay Date (newest)</span>
+          </div>
+          <div class="slip-table">
+            <div class="row head">
+              <div>Pay Date</div><div>Pay Period</div><div>Gross</div><div>Net</div><div>Hours</div><div></div>
+            </div>
+            <div class="row target" id="slipRow">
+              <div><b>May 1, 2026</b></div>
+              <div>Apr 16 – Apr 30, 2026</div>
+              <div class="amount">$5,134.62</div>
+              <div class="amount"><b>$3,418.62</b></div>
+              <div class="amount">80.00</div>
+              <div><span class="view-link" id="viewSlipLink">View</span></div>
+            </div>
+            <div class="row">
+              <div>Apr 17, 2026</div><div>Apr 1 – Apr 15, 2026</div>
+              <div class="amount">$5,134.62</div><div class="amount">$3,418.62</div><div class="amount">80.00</div>
+              <div><span class="view-link">View</span></div>
+            </div>
+            <div class="row">
+              <div>Apr 3, 2026</div><div>Mar 16 – Mar 31, 2026</div>
+              <div class="amount">$5,134.62</div><div class="amount">$3,418.62</div><div class="amount">80.00</div>
+              <div><span class="view-link">View</span></div>
+            </div>
+            <div class="row">
+              <div>Mar 20, 2026</div><div>Mar 1 – Mar 15, 2026</div>
+              <div class="amount">$5,742.10</div><div class="amount">$3,802.45</div><div class="amount">88.00</div>
+              <div><span class="view-link">View</span></div>
+            </div>
+            <div class="row">
+              <div>Mar 6, 2026</div><div>Feb 16 – Feb 28, 2026</div>
+              <div class="amount">$5,134.62</div><div class="amount">$3,418.62</div><div class="amount">80.00</div>
+              <div><span class="view-link">View</span></div>
+            </div>
+            <div class="row">
+              <div>Feb 20, 2026</div><div>Feb 1 – Feb 15, 2026</div>
+              <div class="amount">$5,134.62</div><div class="amount">$3,418.62</div><div class="amount">80.00</div>
+              <div><span class="view-link">View</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">3</span>
+        The newest payslip sits at the top, highlighted in blue. Click <strong>View</strong> to open the payslip detail.
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — PAYSLIP DETAIL ============ -->
+    <div class="screen" data-step="4">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="slip-detail">
+          <div>
+            <div class="slip-toolbar">
+              <div class="crumb-row">
+                <h2>Payslip — May 1, 2026</h2>
+                <span class="crumb">› Pay › Payslips › View</span>
+              </div>
+              <div class="actions">
+                <button class="btn-ghost">Email Payslip</button>
+                <button class="btn-primary" id="printBtn4">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+                  Print
+                </button>
+              </div>
+            </div>
+            <div class="header-meta">
+              <div class="cell"><div class="k">Employee</div><div class="v">Jordan Morales</div></div>
+              <div class="cell"><div class="k">Worker ID</div><div class="v">EMP-44219</div></div>
+              <div class="cell"><div class="k">Pay Period</div><div class="v">Apr 16 – Apr 30, 2026</div></div>
+              <div class="cell"><div class="k">Pay Date</div><div class="v">May 1, 2026</div></div>
+            </div>
+          </div>
+          <div class="slip-grid">
+            <div style="display:flex; flex-direction:column; gap:10px; min-height:0;">
+              <div class="slip-panel">
+                <div class="ph">Earnings</div>
+                <div class="pb">
+                  <div class="pp-row"><div class="lbl">Regular Salary <span class="cur">· 80h</span></div><div class="num">5,000.00</div><div class="num">5,000.00</div></div>
+                  <div class="pp-row"><div class="lbl">Holiday Pay <span class="cur">· 0h</span></div><div class="num">0.00</div><div class="num">0.00</div></div>
+                  <div class="pp-row"><div class="lbl">Performance Bonus</div><div class="num">134.62</div><div class="num">134.62</div></div>
+                  <div class="pp-row tot"><div class="lbl">Gross Earnings</div><div class="num">5,134.62</div><div class="num">5,134.62</div></div>
+                </div>
+              </div>
+              <div class="slip-panel">
+                <div class="ph">Taxes &amp; Deductions</div>
+                <div class="pb">
+                  <div class="pp-row"><div class="lbl">Federal Withholding</div><div class="num">−612.40</div><div class="num">−612.40</div></div>
+                  <div class="pp-row"><div class="lbl">Social Security</div><div class="num">−318.35</div><div class="num">−318.35</div></div>
+                  <div class="pp-row"><div class="lbl">Medicare</div><div class="num">−74.45</div><div class="num">−74.45</div></div>
+                  <div class="pp-row"><div class="lbl">CA State Withholding</div><div class="num">−20.90</div><div class="num">−20.90</div></div>
+                  <div class="pp-row"><div class="lbl">401(k) Pre-Tax · 8%</div><div class="num">−410.77</div><div class="num">−410.77</div></div>
+                  <div class="pp-row"><div class="lbl">Medical (Pre-Tax)</div><div class="num">−201.63</div><div class="num">−201.63</div></div>
+                  <div class="pp-row"><div class="lbl">ESPP (Post-Tax)</div><div class="num">−77.50</div><div class="num">−77.50</div></div>
+                </div>
+              </div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:10px; min-height:0;">
+              <div class="net-banner">
+                <div>
+                  <div class="lbl">Net Pay</div>
+                  <div class="v">$3,418.62</div>
+                  <div class="meta">Direct deposit · ACH-7142</div>
+                </div>
+                <div class="right">
+                  <div>Pay Date</div>
+                  <b>May 1, 2026</b>
+                </div>
+              </div>
+              <div class="slip-panel">
+                <div class="ph">Year-to-Date</div>
+                <div class="pb">
+                  <div class="pp-row"><div class="lbl">YTD Gross</div><div class="num"></div><div class="num">46,884.18</div></div>
+                  <div class="pp-row"><div class="lbl">YTD Taxes</div><div class="num"></div><div class="num">−9,234.99</div></div>
+                  <div class="pp-row"><div class="lbl">YTD Pre-Tax</div><div class="num"></div><div class="num">−5,511.60</div></div>
+                  <div class="pp-row"><div class="lbl">YTD Post-Tax</div><div class="num"></div><div class="num">−697.50</div></div>
+                  <div class="pp-row tot"><div class="lbl">YTD Net</div><div class="num"></div><div class="num">31,440.09</div></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">4</span>
+        The payslip detail shows <strong>Earnings</strong>, <strong>Taxes &amp; Deductions</strong>, <strong>Net Pay</strong>, and <strong>Year-to-Date</strong> totals. Click <strong>Print</strong> to download a PDF copy.
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — PRINT MODAL ============ -->
+    <div class="screen" data-step="5">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="slip-detail" style="opacity: 0.45;">
+          <div>
+            <div class="slip-toolbar">
+              <div class="crumb-row"><h2>Payslip — May 1, 2026</h2></div>
+            </div>
+            <div class="header-meta">
+              <div class="cell"><div class="k">Employee</div><div class="v">Jordan Morales</div></div>
+              <div class="cell"><div class="k">Pay Period</div><div class="v">Apr 16 – Apr 30, 2026</div></div>
+              <div class="cell"><div class="k">Pay Date</div><div class="v">May 1, 2026</div></div>
+              <div class="cell"><div class="k">Net</div><div class="v">$3,418.62</div></div>
+            </div>
+          </div>
+          <div></div>
+        </div>
+
+        <div class="modal-overlay show">
+          <div class="modal">
+            <div class="modal-head">
+              <h3>Print Payslip</h3>
+              <span class="close">&times;</span>
+            </div>
+            <div class="modal-body">
+              <div style="font-size:13px; margin-bottom:10px;">Select a version. The PDF will open in a new tab and is also saved to your Notifications.</div>
+              <div class="radio-group" id="radioGroup5">
+                <div class="radio sel" id="radioOriginal">
+                  <div class="dot"></div>
+                  <div class="txt">
+                    <b>Original Payslip (PDF)</b>
+                    <span>The official copy as issued — includes earnings, taxes, deductions, YTD totals, and direct-deposit allocation.</span>
+                  </div>
+                </div>
+                <div class="radio">
+                  <div class="dot"></div>
+                  <div class="txt">
+                    <b>Reprint with Disclaimer</b>
+                    <span>Same content with a "REPRINT" watermark. Use when sharing with a lender or government agency.</span>
+                  </div>
+                </div>
+              </div>
+              <div class="helper">Tip: Check <em>Notifications</em> if the print job is queued — the PDF link appears there once it's ready.</div>
+            </div>
+            <div class="modal-footer">
+              <button class="btn-ghost">Cancel</button>
+              <button class="btn-primary" id="okBtn5">OK</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">5</span>
+        Workday asks which version to generate. Choose <strong>Original Payslip</strong> for everyday use, then click <strong>OK</strong>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 6 — PDF GENERATING (SCAN OVERLAY) ============ -->
+    <div class="screen" data-step="6">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="pdf-screen">
+          <div class="pdf-bar">
+            <div class="file"><div class="fi">PDF</div> Generating Payslip_2026-05-01.pdf…</div>
+            <div class="actions">
+              <span style="color:#aeb8c3;font-size:12px;">Workday is rendering your payslip</span>
+            </div>
+          </div>
+          <div class="pdf-page-wrap">
+            <div class="pdf-page scan-overlay">
+              <div class="pdf-head">
+                <div class="co">W</div>
+                <div class="ttl">
+                  <h4>Acme Workforce, Inc.</h4>
+                  <div class="sub">2200 Mission St, San Francisco, CA 94110 · EIN 87-1234567</div>
+                </div>
+                <div class="right">
+                  <div>Payslip</div>
+                  <b>May 1, 2026</b>
+                </div>
+              </div>
+              <div class="pdf-meta">
+                <div class="cell"><div class="k">Employee</div><div class="v">Jordan Morales</div></div>
+                <div class="cell"><div class="k">Worker ID</div><div class="v">EMP-44219</div></div>
+                <div class="cell"><div class="k">Pay Period</div><div class="v">Apr 16 – Apr 30, 2026</div></div>
+                <div class="cell"><div class="k">Pay Group</div><div class="v">US-SemiMonthly</div></div>
+              </div>
+              <div class="pdf-section">
+                <div class="sh">Earnings</div>
+                <div class="row"><div>Regular Salary (80h)</div><div class="num">5,000.00</div><div class="num">5,000.00</div></div>
+                <div class="row"><div>Performance Bonus</div><div class="num">134.62</div><div class="num">134.62</div></div>
+                <div class="row tot"><div>Gross Earnings</div><div class="num">5,134.62</div><div class="num">5,134.62</div></div>
+              </div>
+              <div class="pdf-section">
+                <div class="sh">Taxes &amp; Deductions</div>
+                <div class="row"><div>Federal Withholding</div><div class="num">−612.40</div><div class="num">−612.40</div></div>
+                <div class="row"><div>Social Security · Medicare</div><div class="num">−392.80</div><div class="num">−392.80</div></div>
+                <div class="row"><div>CA State Withholding</div><div class="num">−20.90</div><div class="num">−20.90</div></div>
+                <div class="row"><div>401(k) Pre-Tax (8%)</div><div class="num">−410.77</div><div class="num">−410.77</div></div>
+                <div class="row"><div>Medical · Pre-Tax</div><div class="num">−201.63</div><div class="num">−201.63</div></div>
+                <div class="row"><div>ESPP · Post-Tax</div><div class="num">−77.50</div><div class="num">−77.50</div></div>
+                <div class="row tot"><div>Total Deductions</div><div class="num">−1,716.00</div><div class="num">−1,716.00</div></div>
+              </div>
+              <div class="pdf-totals">
+                <div class="cell"><div class="k">Gross</div><div class="v">$5,134.62</div></div>
+                <div class="cell"><div class="k">Deductions</div><div class="v">−$1,716.00</div></div>
+                <div class="cell"><div class="k">Direct Deposit</div><div class="v">ACH-7142</div></div>
+                <div class="cell"><div class="k">Net Pay</div><div class="v green">$3,418.62</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">6</span>
+        Workday renders the PDF with company header, pay-period totals, and direct-deposit allocation. The blue scan bar shows generation in progress.
+      </div>
+    </div>
+
+    <!-- ============ STEP 7 — PDF READY (DOWNLOAD / OPEN) ============ -->
+    <div class="screen" data-step="7">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="pdf-screen">
+          <div class="pdf-bar">
+            <div class="file"><div class="fi">PDF</div> Payslip_2026-05-01.pdf · 142 KB</div>
+            <div class="actions">
+              <button class="btn-pdf" id="downloadBtn7">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Download
+              </button>
+              <button class="btn-pdf">Open in New Tab</button>
+            </div>
+          </div>
+          <div class="pdf-page-wrap">
+            <div class="pdf-page">
+              <div class="pdf-head">
+                <div class="co">W</div>
+                <div class="ttl">
+                  <h4>Acme Workforce, Inc.</h4>
+                  <div class="sub">2200 Mission St, San Francisco, CA 94110 · EIN 87-1234567</div>
+                </div>
+                <div class="right">
+                  <div>Payslip</div>
+                  <b>May 1, 2026</b>
+                </div>
+              </div>
+              <div class="pdf-meta">
+                <div class="cell"><div class="k">Employee</div><div class="v">Jordan Morales</div></div>
+                <div class="cell"><div class="k">Worker ID</div><div class="v">EMP-44219</div></div>
+                <div class="cell"><div class="k">Pay Period</div><div class="v">Apr 16 – Apr 30, 2026</div></div>
+                <div class="cell"><div class="k">Pay Group</div><div class="v">US-SemiMonthly</div></div>
+              </div>
+              <div class="pdf-section">
+                <div class="sh">Earnings</div>
+                <div class="row"><div>Regular Salary (80h)</div><div class="num">5,000.00</div><div class="num">5,000.00</div></div>
+                <div class="row"><div>Performance Bonus</div><div class="num">134.62</div><div class="num">134.62</div></div>
+                <div class="row tot"><div>Gross Earnings</div><div class="num">5,134.62</div><div class="num">5,134.62</div></div>
+              </div>
+              <div class="pdf-section">
+                <div class="sh">Taxes &amp; Deductions</div>
+                <div class="row"><div>Federal Withholding</div><div class="num">−612.40</div><div class="num">−612.40</div></div>
+                <div class="row"><div>Social Security · Medicare</div><div class="num">−392.80</div><div class="num">−392.80</div></div>
+                <div class="row"><div>CA State Withholding</div><div class="num">−20.90</div><div class="num">−20.90</div></div>
+                <div class="row"><div>401(k) Pre-Tax (8%)</div><div class="num">−410.77</div><div class="num">−410.77</div></div>
+                <div class="row"><div>Medical · Pre-Tax</div><div class="num">−201.63</div><div class="num">−201.63</div></div>
+                <div class="row"><div>ESPP · Post-Tax</div><div class="num">−77.50</div><div class="num">−77.50</div></div>
+                <div class="row tot"><div>Total Deductions</div><div class="num">−1,716.00</div><div class="num">−1,716.00</div></div>
+              </div>
+              <div class="pdf-totals">
+                <div class="cell"><div class="k">Gross</div><div class="v">$5,134.62</div></div>
+                <div class="cell"><div class="k">Deductions</div><div class="v">−$1,716.00</div></div>
+                <div class="cell"><div class="k">Direct Deposit</div><div class="v">ACH-7142</div></div>
+                <div class="cell"><div class="k">Net Pay</div><div class="v green">$3,418.62</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="toast" id="toast7">
+          <div class="check">✓</div>
+          <div>
+            <div style="font-weight:600;">Payslip ready</div>
+            <div style="font-size:11px; opacity:0.85;">Payslip_2026-05-01.pdf · click Download to save</div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">7</span>
+        Workday finishes generating the PDF and opens it. Click <strong>Download</strong> to save it locally — the file is also archived under <em>Notifications</em>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 8 — CONFIRMATION ============ -->
+    <div class="screen" data-step="8">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="confirm-screen">
+          <div class="check-big">✓</div>
+          <h2>Payslip downloaded</h2>
+          <p>Your May 1, 2026 payslip has been saved to your device. Workday also keeps every issued payslip on the <em>Pay › Payslips</em> page for at least 7 years.</p>
+          <div class="receipt">
+            <div class="summary-row"><span class="k">Pay Date</span><span>May 1, 2026</span></div>
+            <div class="summary-row"><span class="k">Pay Period</span><span>Apr 16 – Apr 30, 2026</span></div>
+            <div class="summary-row"><span class="k">Gross</span><span>$5,134.62</span></div>
+            <div class="summary-row"><span class="k">Net Pay</span><span>$3,418.62</span></div>
+            <div class="summary-row"><span class="k">Deposit Account</span><span>ACH-7142 · Checking</span></div>
+            <div class="summary-row"><span class="k">File</span><span style="color:var(--wd-blue);">Payslip_2026-05-01.pdf · 142 KB</span></div>
+          </div>
+          <div class="file-chip">
+            <div class="fi">PDF</div> Payslip_2026-05-01.pdf saved to <strong style="margin-left:4px;">~/Downloads</strong>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">8</span>
+        Done — your payslip is on disk and still archived in Workday. To grab a different month, return to <strong>Pay › Payslips</strong> and pick another row.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  <p>
+    This walkthrough is a teaching mockup based on publicly available Workday documentation and partner job aids.
+    Exact labels in your tenant may vary by configuration (e.g., <em>Print</em> vs. <em>Print/Save Payslip</em>, the presence of <em>Reprint with Disclaimer</em>, or whether the file delivers via <em>Notifications</em> versus a direct download).
+    Sources:
+    <a href="https://doc.workday.com/admin-guide/en-us/personal-data/payroll-and-time-off/payslips.html">Workday — Payslips</a>,
+    <a href="https://hr.uw.edu/workday/employee-self-service/pay-and-taxes/view-and-print-payslip/">UW HR — View &amp; Print Payslip</a>,
+    <a href="https://hr.harvard.edu/files/humanresources/files/print_payslip.pdf">Harvard HR — Print a Payslip Job Aid</a>.
+  </p>
+</footer>
+
+<script>
+  // ---------- Screen orchestration ----------
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const TOTAL = screens.length;
+  const stepLabel = document.getElementById('stepLabel');
+  const cursor = document.getElementById('cursor');
+  const playBtn = document.getElementById('playBtn');
+
+  let current = 0;
+  let playing = true;
+  let timer = null;
+  let cursorTimers = [];
+
+  // Duration per step in ms — keep slower steps for the dense PDF screens
+  const DURATIONS = [3800, 4200, 4000, 5000, 4400, 4800, 5000, 5200];
+
+  function clearCursorTimers() {
+    cursorTimers.forEach(t => clearTimeout(t));
+    cursorTimers = [];
+  }
+
+  function moveCursorTo(x, y, clickAfter = true) {
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    if (clickAfter) {
+      const t = setTimeout(() => {
+        cursor.classList.add('click');
+        const t2 = setTimeout(() => cursor.classList.remove('click'), 520);
+        cursorTimers.push(t2);
+      }, 720);
+      cursorTimers.push(t);
+    }
+  }
+
+  function offsetInStage(el) {
+    const stage = document.getElementById('stage');
+    const sr = stage.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return { x: er.left - sr.left + er.width / 2 - 11, y: er.top - sr.top + er.height / 2 - 11 };
+  }
+
+  function showTimedToast(screen, id, delay = 1400) {
+    const toast = screen.querySelector('#' + id);
+    if (!toast) return;
+    const t = setTimeout(() => toast.classList.add('show'), delay);
+    cursorTimers.push(t);
+  }
+
+  function animateStep(i) {
+    clearCursorTimers();
+    cursor.style.left = '-40px';
+    cursor.style.top = '-40px';
+
+    // hide any previously shown toasts
+    document.querySelectorAll('.toast.show').forEach(t => t.classList.remove('show'));
+
+    const screen = screens[i];
+    const t = setTimeout(() => {
+      switch (i) {
+        case 0: {
+          const el = screen.querySelector('#payTile');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 1: {
+          const el = screen.querySelector('#payslipsLink');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 2: {
+          // hover then click "View" link on the highlighted row
+          const el = screen.querySelector('#viewSlipLink');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 3: {
+          const el = screen.querySelector('#printBtn4');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 4: {
+          // hover Original radio (already selected), then click OK
+          const radio = screen.querySelector('#radioOriginal');
+          if (radio) {
+            const p = offsetInStage(radio);
+            moveCursorTo(p.x, p.y);
+          }
+          const t2 = setTimeout(() => {
+            const ok = screen.querySelector('#okBtn5');
+            if (ok) { const q = offsetInStage(ok); moveCursorTo(q.x, q.y); }
+          }, 1900);
+          cursorTimers.push(t2);
+          break;
+        }
+        case 5: {
+          // PDF generating: cursor parks off-screen
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+        case 6: {
+          // toast appears, then cursor moves to Download
+          showTimedToast(screen, 'toast7', 700);
+          const t2 = setTimeout(() => {
+            const dl = screen.querySelector('#downloadBtn7');
+            if (dl) { const q = offsetInStage(dl); moveCursorTo(q.x, q.y); }
+          }, 1500);
+          cursorTimers.push(t2);
+          break;
+        }
+        case 7: {
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+      }
+    }, 250);
+    cursorTimers.push(t);
+  }
+
+  function showStep(i) {
+    current = ((i % TOTAL) + TOTAL) % TOTAL;
+    screens.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    stepLabel.textContent = `Step ${current + 1} / ${TOTAL}`;
+    animateStep(current);
+  }
+
+  function tick() {
+    if (!playing) return;
+    const dur = DURATIONS[current] || 4000;
+    timer = setTimeout(() => {
+      showStep(current + 1);
+      tick();
+    }, dur);
+  }
+
+  function stopTick() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  function togglePlay() {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    if (playing) tick();
+    else stopTick();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    stopTick(); showStep(0); if (playing) tick();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    stopTick(); showStep(current - 1); if (playing) tick();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    stopTick(); showStep(current + 1); if (playing) tick();
+  });
+
+  // Kick off
+  showStep(0);
+  tick();
+</script>
+
+</body>
+</html>

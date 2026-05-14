@@ -1,0 +1,1267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Workday HRM Tutorial — Direct Deposit / Payment Elections (2026-05-14)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --wd-orange: #f38b00;
+    --wd-blue:   #0875e1;
+    --wd-navy:   #152935;
+    --wd-bg:     #f2f4f7;
+    --wd-line:   #dadde2;
+    --wd-text:   #25313d;
+    --wd-muted:  #6b7684;
+    --wd-green:  #2e8540;
+    --wd-amber:  #b8860b;
+    --wd-red:    #b1342f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--wd-text); background: #101418; }
+
+  header.page {
+    padding: 18px 24px; background: #0b0f13; color: #fff;
+    border-bottom: 1px solid #1d242c;
+  }
+  header.page h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  header.page p { margin: 0; font-size: 13px; color: #9aa6b2; }
+  header.page .badge {
+    display: inline-block; background: var(--wd-orange); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 8px; letter-spacing: 0.4px;
+  }
+
+  .stage-wrap { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #cdd4dc; font-size: 13px;
+  }
+  .controls button {
+    background: var(--wd-blue); color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.secondary { background: #334352; }
+  .step-label { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    background: var(--wd-bg); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    border: 1px solid #1d242c;
+  }
+  .screen {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity 420ms ease;
+  }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  /* ---------- Workday chrome ---------- */
+  .wd-topbar {
+    height: 48px; background: var(--wd-navy); color: #fff;
+    display: flex; align-items: center; padding: 0 14px; gap: 14px;
+    font-size: 13px;
+  }
+  .wd-topbar .menu-icon {
+    width: 22px; height: 16px; display: inline-flex; flex-direction: column; justify-content: space-between;
+  }
+  .wd-topbar .menu-icon span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+  .wd-topbar .logo { font-weight: 700; letter-spacing: 0.5px; color: var(--wd-orange); }
+  .wd-topbar .search {
+    flex: 1; max-width: 420px; background: #24333f; border-radius: 3px; padding: 6px 10px; color: #aeb8c3; font-size: 12px;
+  }
+  .wd-topbar .right { margin-left: auto; display: flex; gap: 12px; align-items: center; color: #c8d2dc; }
+  .wd-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#ffb46b,#f38b00);
+    display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .wd-body { position: absolute; top: 48px; bottom: 0; left: 0; right: 0; overflow: hidden; }
+
+  /* ---------- Home dashboard ---------- */
+  .dashboard {
+    padding: 24px 28px; background: linear-gradient(#f7f9fc, #eef2f7); height: 100%;
+  }
+  .dash-hello { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .dash-sub { color: var(--wd-muted); font-size: 13px; margin: 0 0 22px; }
+  .apps-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .app-tile {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 10px; text-align: center; font-size: 12px; color: var(--wd-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); cursor: pointer;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .app-tile.hl { border-color: var(--wd-blue); box-shadow: 0 0 0 2px rgba(8,117,225,0.15); }
+  .app-tile .icon {
+    width: 34px; height: 34px; border-radius: 8px; margin: 0 auto 8px;
+    display: grid; place-items: center; color: #fff; font-size: 16px; font-weight: 700;
+  }
+  .ic-personal { background: #2a8fbd; }
+  .ic-pay      { background: #6a4fb6; }
+  .ic-time     { background: #2e8540; }
+  .ic-benefits { background: #b65c24; }
+  .ic-learning { background: #0875e1; }
+  .ic-expense  { background: #d2622f; }
+  .ic-career   { background: #c23878; }
+
+  /* ---------- Pay landing ---------- */
+  .pay-landing { padding: 22px 28px; background: #fff; height: 100%; overflow: hidden; }
+  .page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .page-title h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .page-title .crumb { color: var(--wd-muted); font-size: 12px; }
+
+  .pay-actions {
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; height: calc(100% - 50px);
+  }
+  .pay-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .pay-card h3 {
+    margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--wd-line);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700; background: #fafbfc;
+  }
+  .menu-list { display: flex; flex-direction: column; }
+  .menu-list .item {
+    padding: 12px 16px; border-bottom: 1px solid var(--wd-line);
+    font-size: 13px; display: flex; align-items: center; gap: 10px;
+    color: var(--wd-blue); cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .menu-list .item:last-child { border-bottom: none; }
+  .menu-list .item:hover, .menu-list .item.hl {
+    background: #eaf4ff;
+  }
+  .menu-list .item .ic {
+    width: 22px; height: 22px; border-radius: 4px; flex-shrink: 0;
+    background: rgba(8,117,225,0.12);
+    display: grid; place-items: center; color: var(--wd-blue);
+    font-size: 12px; font-weight: 700;
+  }
+  .menu-list .item .label { flex: 1; }
+  .menu-list .item .meta { color: var(--wd-muted); font-size: 11px; }
+
+  .pay-stats {
+    background: linear-gradient(135deg,#f3f0fb,#ece6f7);
+    border: 1px solid #d6c9ec; border-radius: 6px;
+    padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .pay-stats h4 {
+    margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: #6a4fb6;
+  }
+  .pay-stats .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #d6c9ec; font-size: 12px; }
+  .pay-stats .row:last-child { border-bottom: none; }
+  .pay-stats .row .k { color: var(--wd-muted); }
+  .pay-stats .row .v { font-weight: 700; color: var(--wd-text); }
+
+  /* ---------- Generic page chrome ---------- */
+  .page-screen {
+    padding: 22px 28px; background: #fff; height: 100%; overflow: hidden;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 12px;
+  }
+  .pi-toolbar {
+    display: flex; gap: 10px; align-items: center; padding: 4px 0;
+  }
+  .pi-toolbar .crumb-row { display: flex; align-items: center; gap: 8px; }
+  .pi-toolbar .crumb-row h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .pi-toolbar .crumb-row .crumb { color: var(--wd-muted); font-size: 12px; }
+  .pi-toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .btn-primary {
+    background: var(--wd-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 3px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:disabled { background: #b9c5d1; cursor: default; }
+  .btn-ghost {
+    background: #fff; color: var(--wd-blue); border: 1px solid var(--wd-blue);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-cancel {
+    background: #fff; color: var(--wd-text); border: 1px solid var(--wd-line);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+
+  /* ---------- Accounts list ---------- */
+  .accounts-block {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px; overflow: hidden;
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .accounts-block .ah {
+    padding: 10px 14px; background: #fafbfc; border-bottom: 1px solid var(--wd-line);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .accounts-block .ah .add-acct {
+    margin-left: auto; background: var(--wd-blue); color: #fff;
+    padding: 5px 12px; border-radius: 3px; font-size: 12px; font-weight: 600;
+    border: none; cursor: pointer; letter-spacing: 0.3px; text-transform: none;
+    display: inline-flex; align-items: center; gap: 6px;
+    transition: box-shadow 200ms ease;
+  }
+  .accounts-block .ah .add-acct.hl { box-shadow: 0 0 0 4px rgba(8,117,225,0.15); }
+
+  .account-row {
+    display: grid; grid-template-columns: 40px 1.2fr 1fr 1fr 80px;
+    gap: 14px; padding: 12px 14px; align-items: center;
+    border-bottom: 1px solid var(--wd-line); font-size: 13px;
+  }
+  .account-row:last-child { border-bottom: none; }
+  .account-row.new {
+    background: #fffbf0; border-left: 3px solid var(--wd-amber);
+    animation: rowIn 600ms ease;
+  }
+  @keyframes rowIn {
+    from { transform: translateY(-6px); opacity: 0; }
+    to   { transform: translateY(0); opacity: 1; }
+  }
+  .account-row .bank-ic {
+    width: 30px; height: 30px; border-radius: 6px; display: grid; place-items: center;
+    color: #fff; font-weight: 700; font-size: 11px;
+  }
+  .bank-chase { background: linear-gradient(135deg,#117ac9,#0a5797); }
+  .bank-ally  { background: linear-gradient(135deg,#7a51c0,#572b9c); }
+  .account-row .name { font-weight: 600; color: var(--wd-text); }
+  .account-row .sub  { color: var(--wd-muted); font-size: 11px; margin-top: 2px; }
+  .account-row .acct-type {
+    display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.4px; padding: 2px 7px; border-radius: 3px;
+    background: rgba(8,117,225,0.1); color: var(--wd-blue);
+  }
+  .account-row .acct-type.savings { background: rgba(106,79,182,0.12); color: #6a4fb6; }
+  .account-row .verify {
+    font-size: 11px; font-weight: 600; padding: 2px 8px; border-radius: 999px;
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .verify.ok { background: rgba(46,133,64,0.14); color: var(--wd-green); }
+  .verify.pending { background: rgba(184,134,11,0.18); color: var(--wd-amber); }
+  .account-row .verify .dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+  .account-row .last-edit { color: var(--wd-muted); font-size: 11px; }
+  .account-row .row-act { color: var(--wd-blue); cursor: pointer; font-size: 12px; font-weight: 600; }
+
+  /* ---------- Elections grid (allocations) ---------- */
+  .elections-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px; overflow: hidden;
+  }
+  .elections-card .eh {
+    padding: 10px 14px; background: #fafbfc; border-bottom: 1px solid var(--wd-line);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .elections-card .eh .change-elect {
+    margin-left: auto; background: var(--wd-blue); color: #fff;
+    padding: 5px 12px; border-radius: 3px; font-size: 12px; font-weight: 600;
+    border: none; cursor: pointer; letter-spacing: 0.3px; text-transform: none;
+    transition: box-shadow 200ms ease;
+  }
+  .elections-card .eh .change-elect.hl { box-shadow: 0 0 0 4px rgba(8,117,225,0.15); }
+
+  .elect-row {
+    display: grid; grid-template-columns: 110px 1fr 140px 160px;
+    gap: 14px; padding: 12px 14px; align-items: center;
+    border-bottom: 1px solid var(--wd-line); font-size: 13px;
+  }
+  .elect-row:last-child { border-bottom: none; }
+  .elect-row .type {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+    color: var(--wd-muted); font-weight: 700;
+  }
+  .elect-row .acct { color: var(--wd-text); }
+  .elect-row .method {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 600;
+    background: rgba(46,133,64,0.12); color: var(--wd-green);
+    padding: 2px 8px; border-radius: 3px;
+  }
+  .elect-row .alloc {
+    font-variant-numeric: tabular-nums; font-weight: 700; color: var(--wd-text);
+    text-align: right; font-size: 14px;
+  }
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop {
+    position: absolute; inset: 0; background: rgba(21,41,53,0.55);
+    display: grid; place-items: center; z-index: 20;
+    backdrop-filter: blur(1px);
+    animation: fadeIn 240ms ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .modal {
+    width: min(640px, 88%); background: #fff; border-radius: 8px;
+    box-shadow: 0 18px 48px rgba(0,0,0,0.4);
+    overflow: hidden;
+    animation: modalIn 360ms cubic-bezier(0.18, 0.89, 0.32, 1.28);
+    display: flex; flex-direction: column; max-height: 88%;
+  }
+  @keyframes modalIn {
+    from { transform: translateY(20px) scale(0.96); opacity: 0; }
+    to   { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .modal h3 {
+    margin: 0; padding: 14px 18px; font-size: 15px; font-weight: 600;
+    background: #fff; border-bottom: 1px solid var(--wd-line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .modal h3 .ic {
+    width: 26px; height: 26px; border-radius: 6px; background: rgba(8,117,225,0.12);
+    color: var(--wd-blue); display: grid; place-items: center; font-weight: 700; font-size: 13px;
+  }
+  .modal .mbody { padding: 18px; flex: 1; overflow: auto; }
+  .modal .mfooter {
+    padding: 12px 18px; background: #fafbfc; border-top: 1px solid var(--wd-line);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .modal .mfooter .right { margin-left: auto; display: flex; gap: 8px; }
+  .modal .mfooter .note { font-size: 11px; color: var(--wd-muted); }
+
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block; font-size: 11px; color: var(--wd-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;
+    font-weight: 600;
+  }
+  .field label .req { color: var(--wd-red); margin-left: 2px; }
+  .input, .select {
+    width: 100%; padding: 8px 10px; font-size: 13px;
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 3px;
+    color: var(--wd-text); font-family: inherit; min-height: 32px;
+    transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+    position: relative;
+  }
+  .input.focused, .select.focused {
+    border-color: var(--wd-blue); box-shadow: 0 0 0 3px rgba(8,117,225,0.15);
+    background: #fafdff;
+  }
+  .input.changed { border-color: var(--wd-amber); background: #fffbf0; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .helper { font-size: 11px; color: var(--wd-muted); margin-top: 3px; }
+  .helper.amber { color: var(--wd-amber); }
+  .helper.green { color: var(--wd-green); }
+
+  .reveal-new {
+    display: inline-block; overflow: hidden; white-space: nowrap;
+    width: 0; color: var(--wd-amber); font-weight: 600;
+  }
+  .screen.active .reveal-new.r1 { animation: lineIn 900ms steps(20, end) 350ms forwards; }
+  .screen.active .reveal-new.r2 { animation: lineIn 1100ms steps(28, end) 1500ms forwards; }
+  .screen.active .reveal-new.r3 { animation: lineIn 1000ms steps(18, end) 2800ms forwards; }
+  .screen.active .reveal-new.r4 { animation: lineIn 700ms steps(8, end) 3900ms forwards; }
+  @keyframes lineIn {
+    from { width: 0; }
+    to   { width: var(--target-w, 100%); }
+  }
+
+  /* ---------- Check art (for routing/account inline) ---------- */
+  .check-art {
+    border: 1px solid var(--wd-line); border-radius: 4px; padding: 10px 12px;
+    background: linear-gradient(180deg,#fbfdff,#eef4fa);
+    position: relative; font-family: "Courier New", monospace; font-size: 11px;
+    color: var(--wd-text); margin-bottom: 10px;
+  }
+  .check-art .corner {
+    position: absolute; top: 6px; right: 8px; font-size: 9px; color: var(--wd-muted);
+    font-family: -apple-system, sans-serif; letter-spacing: 0.4px;
+  }
+  .check-art .micr {
+    margin-top: 24px; letter-spacing: 2px; color: var(--wd-text);
+    display: flex; gap: 14px;
+  }
+  .check-art .micr .group { display: inline-flex; flex-direction: column; }
+  .check-art .micr .group small {
+    font-family: -apple-system, sans-serif; font-size: 9px; letter-spacing: 0.4px;
+    color: var(--wd-muted); text-transform: uppercase;
+  }
+  .check-art .micr .group.hl small { color: var(--wd-blue); }
+  .check-art .micr .group.hl strong {
+    color: var(--wd-blue);
+    background: rgba(8,117,225,0.12); padding: 1px 4px; border-radius: 2px;
+  }
+  .check-art .micr .group.hl2 small { color: #6a4fb6; }
+  .check-art .micr .group.hl2 strong {
+    color: #6a4fb6;
+    background: rgba(106,79,182,0.12); padding: 1px 4px; border-radius: 2px;
+  }
+
+  /* ---------- Distribution editor ---------- */
+  .dist-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 14px; height: 100%; min-height: 0; }
+  .dist-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 10px;
+    overflow: auto;
+  }
+  .dist-card h4 {
+    margin: 0 0 6px; font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-muted); padding-bottom: 6px; border-bottom: 1px solid var(--wd-line);
+  }
+  .dist-row {
+    display: grid; grid-template-columns: 30px 1fr 140px 90px;
+    gap: 10px; align-items: center; padding: 10px 4px;
+    border-bottom: 1px dashed var(--wd-line); font-size: 13px;
+  }
+  .dist-row:last-child { border-bottom: none; }
+  .dist-row .ord {
+    width: 24px; height: 24px; border-radius: 50%; display: grid; place-items: center;
+    color: #fff; font-weight: 700; font-size: 11px; background: var(--wd-blue);
+  }
+  .dist-row .ord.savings { background: #6a4fb6; }
+  .dist-row .nm { font-weight: 600; color: var(--wd-text); }
+  .dist-row .sub { color: var(--wd-muted); font-size: 11px; }
+  .dist-row .amt-input {
+    border: 1px solid var(--wd-line); border-radius: 3px; padding: 6px 8px;
+    background: #fff; font-size: 13px; font-family: inherit; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .dist-row .amt-input.changed { background: #fffbf0; border-color: var(--wd-amber); font-weight: 700; }
+  .dist-row .balance {
+    color: var(--wd-green); font-weight: 700; text-align: right;
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.3px;
+  }
+  .dist-row .method-pill {
+    text-align: right; font-size: 11px;
+    color: var(--wd-muted);
+  }
+  .dist-meta {
+    background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 12px 14px; font-size: 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .dist-meta .k { color: var(--wd-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; }
+  .dist-meta .v { color: var(--wd-text); font-weight: 600; margin-top: 1px; }
+  .dist-meta .vchk { display: flex; align-items: center; gap: 6px; }
+  .dist-meta .vchk .b { width: 10px; height: 10px; border-radius: 50%; background: var(--wd-green); }
+
+  .stacked-bar {
+    display: flex; height: 14px; border-radius: 3px; overflow: hidden;
+    border: 1px solid var(--wd-line); background: #fafbfc;
+  }
+  .stacked-bar .seg-checking {
+    background: linear-gradient(180deg,#117ac9,#0a5797);
+    width: 0; transition: width 900ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .stacked-bar .seg-savings {
+    background: linear-gradient(180deg,#7a51c0,#572b9c);
+    width: 0; transition: width 900ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .screen.active .seg-checking { width: var(--w-chk, 0%); }
+  .screen.active .seg-savings  { width: var(--w-sav, 0%); }
+
+  .leg { display: flex; gap: 16px; font-size: 11px; color: var(--wd-muted); margin-top: 4px; }
+  .leg .lg { display: inline-flex; align-items: center; gap: 6px; }
+  .leg .lg .d { width: 8px; height: 8px; border-radius: 2px; }
+  .leg .lg .d.chk { background: #117ac9; }
+  .leg .lg .d.sav { background: #7a51c0; }
+
+  /* ---------- Effective date / pre-note panel ---------- */
+  .review-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0;
+  }
+  .review-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 10px; overflow: auto;
+  }
+  .review-card h4 {
+    margin: 0 0 6px; font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-muted); padding-bottom: 6px; border-bottom: 1px solid var(--wd-line);
+  }
+  .kv { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+  .kv .k { color: var(--wd-muted); }
+  .kv .v { color: var(--wd-text); font-weight: 600; }
+  .pre-note {
+    background: linear-gradient(135deg,#fffaf0,#fef0e0);
+    border: 1px solid #f5d6a8; border-radius: 6px;
+    padding: 10px 14px; font-size: 12px; color: var(--wd-text);
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .pre-note .pic {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--wd-amber);
+    color: #fff; display: grid; place-items: center; flex-shrink: 0; font-weight: 700; font-size: 13px;
+  }
+  .pre-note strong { color: var(--wd-text); }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: absolute; left: 50%; bottom: 70px; transform: translate(-50%, 20px);
+    background: var(--wd-navy); color: #fff; padding: 10px 16px;
+    border-radius: 6px; font-size: 13px; box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+    display: flex; align-items: center; gap: 10px;
+    opacity: 0; transition: opacity 320ms ease, transform 320ms ease;
+    border-left: 4px solid var(--wd-green);
+    z-index: 30;
+  }
+  .screen.active .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast .check { width: 22px; height: 22px; border-radius: 50%; background: var(--wd-green); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+
+  /* ---------- Confirmation ---------- */
+  .confirm-screen {
+    padding: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; background: linear-gradient(#fbfdff, #f0f6fd); height: 100%;
+  }
+  .check-big {
+    width: 78px; height: 78px; border-radius: 50%; background: var(--wd-green);
+    color: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(46,133,64,0.3);
+    animation: pop 600ms ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .confirm-screen h2 { margin: 16px 0 6px; font-size: 22px; }
+  .confirm-screen p  { margin: 0; color: var(--wd-muted); font-size: 13px; max-width: 600px; }
+  .summary-card {
+    margin-top: 20px; background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 16px 20px; min-width: 560px; text-align: left;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+  .summary-card h4 {
+    margin: 0 0 10px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-muted);
+  }
+  .summary-row {
+    display: grid; grid-template-columns: 28px 1fr 120px;
+    gap: 10px; padding: 6px 0; border-bottom: 1px dashed var(--wd-line);
+    font-size: 12px; align-items: baseline;
+  }
+  .summary-row:last-of-type { border-bottom: 2px solid var(--wd-navy); padding-bottom: 9px; }
+  .summary-row .k { color: var(--wd-muted); }
+  .summary-row .desc { color: var(--wd-text); font-weight: 500; }
+  .summary-row .amt { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+  .summary-grand {
+    display: grid; grid-template-columns: 1fr 120px; gap: 10px;
+    padding: 9px 0 4px; font-size: 14px; font-weight: 700;
+  }
+  .summary-grand .v { color: var(--wd-blue); text-align: right; font-variant-numeric: tabular-nums; }
+  .approval-line {
+    margin-top: 12px; font-size: 12px; color: var(--wd-muted); display: flex; gap: 8px; align-items: center;
+  }
+  .approval-line .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--wd-green);
+  }
+
+  /* ---------- Cursor ---------- */
+  .cursor {
+    position: absolute; width: 22px; height: 22px; z-index: 50;
+    left: -40px; top: -40px;
+    pointer-events: none;
+    transition: left 700ms cubic-bezier(0.22, 0.61, 0.36, 1), top 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  .cursor.click::after {
+    content: ""; position: absolute; left: 2px; top: 2px; width: 22px; height: 22px;
+    border-radius: 50%; border: 2px solid rgba(8,117,225,0.6);
+    animation: ring 500ms ease-out;
+  }
+  @keyframes ring {
+    0%   { transform: scale(0.4); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ---------- Narration ---------- */
+  .narration {
+    position: absolute; left: 16px; bottom: 16px; right: 16px;
+    background: rgba(21,41,53,0.94); color: #fff; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; line-height: 1.4;
+    display: flex; align-items: flex-start; gap: 10px;
+    border-left: 4px solid var(--wd-orange);
+    z-index: 40;
+  }
+  .narration .n {
+    background: var(--wd-orange); color: #fff; font-weight: 700; font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+
+  footer.page {
+    max-width: 1100px; margin: 14px auto 40px; padding: 0 16px;
+    color: #8b97a3; font-size: 12px; line-height: 1.5;
+  }
+  footer.page a { color: #9ec3ea; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1><span class="badge">Workday HRM</span> Direct Deposit / Payment Elections — Animated Walkthrough</h1>
+  <p>Daily tutorial · 2026-05-14 · Based on public Workday documentation and partner-published job aids.</p>
+</header>
+
+<div class="stage-wrap">
+  <div class="controls">
+    <button id="playBtn">Pause</button>
+    <button class="secondary" id="restartBtn">Restart</button>
+    <button class="secondary" id="prevBtn">&lsaquo; Prev</button>
+    <button class="secondary" id="nextBtn">Next &rsaquo;</button>
+    <div class="step-label" id="stepLabel">Step 1 / 8</div>
+  </div>
+
+  <div class="stage" id="stage">
+
+    <!-- Cursor overlay -->
+    <div class="cursor" id="cursor">
+      <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2 L2 18 L7 14 L10 20 L13 19 L10 13 L17 13 Z" fill="#ffffff" stroke="#152935" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- ============ STEP 1 — HOME DASHBOARD ============ -->
+    <div class="screen" data-step="1">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right">
+          <span>Inbox</span><span>Notifications</span>
+          <div class="wd-avatar">JM</div>
+        </div>
+      </div>
+      <div class="wd-body">
+        <div class="dashboard">
+          <h2 class="dash-hello">Good morning, Jordan</h2>
+          <p class="dash-sub">Thursday, May 14, 2026 · You opened a new Ally savings account — let's split your paycheck so 30% goes to savings each pay run.</p>
+          <div class="apps-grid">
+            <div class="app-tile" id="payTile"><div class="icon ic-pay">$</div>Pay</div>
+            <div class="app-tile"><div class="icon ic-expense">$</div>Expenses</div>
+            <div class="app-tile"><div class="icon ic-time">T</div>Time</div>
+            <div class="app-tile"><div class="icon ic-personal">P</div>Personal</div>
+            <div class="app-tile"><div class="icon ic-benefits">B</div>Benefits</div>
+            <div class="app-tile"><div class="icon ic-learning">L</div>Learning</div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">1</span>
+        From your Workday home, click the <strong>Pay</strong> app tile to open your pay hub.
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 — PAY LANDING ============ -->
+    <div class="screen" data-step="2">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="pay-landing">
+          <div class="page-title">
+            <h2>Pay</h2>
+            <span class="crumb">› Worker Hub</span>
+          </div>
+          <div class="pay-actions">
+            <div class="pay-card">
+              <h3>Tasks</h3>
+              <div class="menu-list">
+                <div class="item"><div class="ic">P</div><span class="label">Payslips</span><span class="meta">12 available · YTD</span></div>
+                <div class="item hl" id="paymentElectionsItem"><div class="ic">D</div><span class="label">Payment Elections</span><span class="meta">Direct deposit accounts &amp; distribution</span></div>
+                <div class="item"><div class="ic">T</div><span class="label">Tax Elections</span><span class="meta">W-4 · State withholdings</span></div>
+                <div class="item"><div class="ic">B</div><span class="label">Bonus &amp; One-Time Payments</span><span class="meta">Sign-on, referral, retention</span></div>
+                <div class="item"><div class="ic">Y</div><span class="label">Year-to-Date Summary</span><span class="meta">Earnings, deductions, taxes</span></div>
+              </div>
+            </div>
+            <div class="pay-stats">
+              <h4>Last Payslip · May 1, 2026</h4>
+              <div class="row"><span class="k">Net Pay</span><span class="v">$3,418.62</span></div>
+              <div class="row"><span class="k">Direct deposit</span><span class="v">Chase Checking ····4291 · 100%</span></div>
+              <div class="row"><span class="k">YTD Net</span><span class="v">$30,128.07</span></div>
+              <div class="row"><span class="k">Next pay date</span><span class="v">May 15, 2026</span></div>
+              <div class="row"><span class="k">Pay frequency</span><span class="v">Bi-weekly</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">2</span>
+        The Pay hub opens. Under <strong>Tasks</strong>, click <strong>Payment Elections</strong> to manage direct deposit.
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 — PAYMENT ELECTIONS PAGE (1 ACCOUNT) ============ -->
+    <div class="screen" data-step="3">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Payment Elections</h2>
+              <span class="crumb">› Jordan Mitchell · Worker</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: hidden;">
+            <div class="accounts-block">
+              <div class="ah">Accounts
+                <button class="add-acct hl" id="addAcctBtn">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add
+                </button>
+              </div>
+              <div class="account-row">
+                <div class="bank-ic bank-chase">CH</div>
+                <div>
+                  <div class="name">Chase Checking</div>
+                  <div class="sub">Bank · ····4291 · Routing 021000021</div>
+                </div>
+                <div><span class="acct-type">Checking</span></div>
+                <div><span class="verify ok"><span class="dot"></span>Verified</span></div>
+                <div class="last-edit">Added Mar 2024</div>
+              </div>
+            </div>
+            <div class="elections-card">
+              <div class="eh">Payment Elections
+                <button class="change-elect">Change</button>
+              </div>
+              <div class="elect-row">
+                <div class="type">Regular Pay</div>
+                <div class="acct">Chase Checking ····4291</div>
+                <div><span class="method">Direct Deposit</span></div>
+                <div class="alloc">100%</div>
+              </div>
+              <div class="elect-row">
+                <div class="type">Expense Payments</div>
+                <div class="acct">Chase Checking ····4291</div>
+                <div><span class="method">Direct Deposit</span></div>
+                <div class="alloc">Balance</div>
+              </div>
+              <div class="elect-row">
+                <div class="type">Bonus</div>
+                <div class="acct">Chase Checking ····4291</div>
+                <div><span class="method">Direct Deposit</span></div>
+                <div class="alloc">100%</div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--wd-muted);">
+            Changes to payment elections take effect for the next unscheduled pay run.
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">3</span>
+        Your current setup: one account, all pay types route to Chase. Click <strong>Add</strong> to add a second bank account.
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — ADD ACCOUNT MODAL ============ -->
+    <div class="screen" data-step="4">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <!-- backdrop page content (dimmed) -->
+        <div class="page-screen" style="filter: blur(0.5px); opacity: 0.55;">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Payment Elections</h2>
+              <span class="crumb">› Jordan Mitchell · Worker</span>
+            </div>
+          </div>
+          <div class="accounts-block">
+            <div class="ah">Accounts</div>
+            <div class="account-row">
+              <div class="bank-ic bank-chase">CH</div>
+              <div><div class="name">Chase Checking</div><div class="sub">····4291</div></div>
+              <div><span class="acct-type">Checking</span></div>
+              <div><span class="verify ok"><span class="dot"></span>Verified</span></div>
+              <div class="last-edit">Added Mar 2024</div>
+            </div>
+          </div>
+          <div></div>
+        </div>
+
+        <div class="modal-backdrop">
+          <div class="modal">
+            <h3><span class="ic">+</span> Add Account</h3>
+            <div class="mbody">
+              <div class="check-art">
+                <span class="corner">Reference check</span>
+                <div>Pay to the order of <strong>____________________</strong></div>
+                <div class="micr">
+                  <span class="group hl"><strong>⑆ 124003116 ⑆</strong><small>Routing (9 digits)</small></span>
+                  <span class="group hl2"><strong>1294582031 ⑈</strong><small>Account</small></span>
+                  <span class="group"><strong>0421</strong><small>Check #</small></span>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Account Nickname <span class="req">*</span></label>
+                  <div class="input changed focused" id="nicknameField">
+                    <span class="reveal-new r1" style="--target-w: 14ch;">Ally Savings</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Account Type <span class="req">*</span></label>
+                  <div class="select">Savings</div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Routing Transit Number <span class="req">*</span></label>
+                  <div class="input changed" id="routingField">
+                    <span class="reveal-new r2" style="--target-w: 11ch;">124003116</span>
+                  </div>
+                  <div class="helper green">Recognized: Ally Bank — Sandy, UT</div>
+                </div>
+                <div class="field">
+                  <label>Account Number <span class="req">*</span></label>
+                  <div class="input changed" id="acctField">
+                    <span class="reveal-new r3" style="--target-w: 12ch;">1294582031</span>
+                  </div>
+                </div>
+              </div>
+              <div class="field-row">
+                <div class="field">
+                  <label>Confirm Account Number <span class="req">*</span></label>
+                  <div class="input changed" id="confirmField">
+                    <span class="reveal-new r4" style="--target-w: 12ch;">1294582031</span>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Bank Name</label>
+                  <div class="input" style="background:#f3f6fa;">Ally Bank, N.A.</div>
+                </div>
+              </div>
+              <div class="helper amber">Workday will send a $0.00 pre-note to verify the account before routing live deposits (typically 1-2 pay cycles).</div>
+            </div>
+            <div class="mfooter">
+              <span class="note">All bank data is encrypted at rest. Audit log captures who/when.</span>
+              <div class="right">
+                <button class="btn-cancel">Cancel</button>
+                <button class="btn-primary" id="saveAcctBtn">OK</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">4</span>
+        Enter the routing and account numbers from the bottom of a check. Workday recognizes the routing number and confirms the bank.
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — TWO ACCOUNTS LISTED ============ -->
+    <div class="screen" data-step="5">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Payment Elections</h2>
+              <span class="crumb">› 2 accounts · 1 pending pre-note</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: hidden;">
+            <div class="accounts-block">
+              <div class="ah">Accounts</div>
+              <div class="account-row">
+                <div class="bank-ic bank-chase">CH</div>
+                <div>
+                  <div class="name">Chase Checking</div>
+                  <div class="sub">Bank · ····4291 · Routing 021000021</div>
+                </div>
+                <div><span class="acct-type">Checking</span></div>
+                <div><span class="verify ok"><span class="dot"></span>Verified</span></div>
+                <div class="last-edit">Added Mar 2024</div>
+              </div>
+              <div class="account-row new">
+                <div class="bank-ic bank-ally">AL</div>
+                <div>
+                  <div class="name">Ally Savings</div>
+                  <div class="sub">Bank · ····2031 · Routing 124003116</div>
+                </div>
+                <div><span class="acct-type savings">Savings</span></div>
+                <div><span class="verify pending"><span class="dot"></span>Pre-note pending</span></div>
+                <div class="last-edit">Just now</div>
+              </div>
+            </div>
+            <div class="elections-card">
+              <div class="eh">Payment Elections
+                <button class="change-elect hl" id="changeElectionBtn">Change Election</button>
+              </div>
+              <div class="elect-row">
+                <div class="type">Regular Pay</div>
+                <div class="acct">Chase Checking ····4291</div>
+                <div><span class="method">Direct Deposit</span></div>
+                <div class="alloc">100%</div>
+              </div>
+              <div class="elect-row" style="background: rgba(184,134,11,0.06);">
+                <div class="type" style="color: var(--wd-amber);">Action needed</div>
+                <div class="acct" style="color: var(--wd-amber);">Split paycheck between Chase &amp; Ally to start funding savings.</div>
+                <div></div>
+                <div></div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--wd-muted);">
+            Adding an account doesn't change where your money goes — you must edit Payment Elections next.
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">5</span>
+        Ally Savings is added (pending pre-note). To split your paycheck, click <strong>Change Election</strong> on Regular Pay.
+      </div>
+    </div>
+
+    <!-- ============ STEP 6 — EDIT DISTRIBUTION ============ -->
+    <div class="screen" data-step="6">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen" style="--w-chk: 70%; --w-sav: 30%;">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Change Payment Election — Regular Pay</h2>
+              <span class="crumb">› Edit distribution</span>
+            </div>
+          </div>
+          <div class="dist-grid">
+            <div class="dist-card">
+              <h4>Distribution Order</h4>
+              <div class="dist-row">
+                <div class="ord savings">1</div>
+                <div>
+                  <div class="nm">Ally Savings ····2031</div>
+                  <div class="sub">Fixed amount · processed first</div>
+                </div>
+                <div class="amt-input changed">$<span style="display:inline-block; min-width: 5ch; text-align:right;">1,025.00</span></div>
+                <div class="method-pill">≈ 30% of net</div>
+              </div>
+              <div class="dist-row">
+                <div class="ord">2</div>
+                <div>
+                  <div class="nm">Chase Checking ····4291</div>
+                  <div class="sub">Remaining balance · processed second</div>
+                </div>
+                <div class="balance">Balance</div>
+                <div class="method-pill">≈ 70% of net</div>
+              </div>
+              <div style="margin-top: 6px;">
+                <div class="stacked-bar">
+                  <div class="seg-checking"></div>
+                  <div class="seg-savings"></div>
+                </div>
+                <div class="leg">
+                  <span class="lg"><span class="d chk"></span>Chase Checking · ~$2,393</span>
+                  <span class="lg"><span class="d sav"></span>Ally Savings · $1,025</span>
+                </div>
+              </div>
+            </div>
+            <div class="dist-card">
+              <h4>Settings</h4>
+              <div class="dist-meta">
+                <div><span class="k">Payment Type</span><div class="v">Regular Pay</div></div>
+              </div>
+              <div class="dist-meta">
+                <div><span class="k">Effective Date</span><div class="v">May 15, 2026 (next pay run)</div></div>
+              </div>
+              <div class="dist-meta">
+                <div><span class="k">Order Logic</span><div class="v">Fixed amounts first, then balance.</div></div>
+              </div>
+              <div class="pre-note">
+                <div class="pic">!</div>
+                <div>
+                  <strong>Pre-note on Ally Savings.</strong>
+                  First pay run after May 15 will route the full check to Chase. Once Ally clears the $0 pre-note (~6 business days), the $1,025 split begins.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; padding-top: 6px; border-top: 1px solid var(--wd-line);">
+            <span class="note" style="font-size: 11px; color: var(--wd-muted);">Tip: drag rows to reorder. Use percentages for variable bonuses.</span>
+            <div style="margin-left: auto; display: flex; gap: 8px;">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-primary" id="reviewBtn">Review</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">6</span>
+        Add Ally Savings as priority 1 at a fixed <strong>$1,025</strong>. Chase gets the remaining balance — about a 30/70 split.
+      </div>
+    </div>
+
+    <!-- ============ STEP 7 — REVIEW & SUBMIT ============ -->
+    <div class="screen" data-step="7">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen" style="--w-chk: 70%; --w-sav: 30%;">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Review Payment Election Change</h2>
+              <span class="crumb">› Confirm before submitting</span>
+            </div>
+            <div class="actions">
+              <button class="btn-cancel">Back</button>
+              <button class="btn-primary" id="submitBtn7">Submit</button>
+            </div>
+          </div>
+          <div class="review-grid">
+            <div class="review-card">
+              <h4>Before → After</h4>
+              <div style="font-size: 12px; color: var(--wd-muted); margin-bottom: 4px;">Before</div>
+              <div class="stacked-bar" style="--w-chk: 100%; --w-sav: 0%;">
+                <div class="seg-checking"></div>
+                <div class="seg-savings"></div>
+              </div>
+              <div class="leg"><span class="lg"><span class="d chk"></span>Chase · 100% (Balance)</span></div>
+              <div style="font-size: 12px; color: var(--wd-muted); margin-top: 10px; margin-bottom: 4px;">After</div>
+              <div class="stacked-bar">
+                <div class="seg-checking"></div>
+                <div class="seg-savings"></div>
+              </div>
+              <div class="leg">
+                <span class="lg"><span class="d chk"></span>Chase · ~$2,393</span>
+                <span class="lg"><span class="d sav"></span>Ally · $1,025 fixed</span>
+              </div>
+              <div class="kv" style="border-top: 1px dashed var(--wd-line); padding-top: 8px; margin-top: 4px;">
+                <span class="k">Estimated savings/year</span><span class="v" style="color: var(--wd-green);">+$26,650</span>
+              </div>
+            </div>
+            <div class="review-card">
+              <h4>Change Summary</h4>
+              <div class="kv"><span class="k">Pay Type</span><span class="v">Regular Pay (bi-weekly)</span></div>
+              <div class="kv"><span class="k">Effective</span><span class="v">May 15, 2026</span></div>
+              <div class="kv"><span class="k">Accounts</span><span class="v">2 (Chase + Ally)</span></div>
+              <div class="kv"><span class="k">Pre-note status</span><span class="v" style="color: var(--wd-amber);">Pending — Ally</span></div>
+              <div class="kv"><span class="k">Expense Payments</span><span class="v">Still 100% → Chase</span></div>
+              <div class="kv"><span class="k">Bonus Payments</span><span class="v">Still 100% → Chase</span></div>
+              <div class="pre-note" style="margin-top: 6px;">
+                <div class="pic">✓</div>
+                <div>
+                  <strong>Authorization.</strong>
+                  By submitting, I authorize Acme Industries, Inc. to deposit funds and, if needed, reverse erroneous deposits per NACHA rules.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="toast" id="toastSubmitted"><div class="check">✓</div>Payment elections updated.</div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">7</span>
+        Review the before/after split, confirm the authorization, then click <strong>Submit</strong>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 8 — CONFIRMATION ============ -->
+    <div class="screen" data-step="8">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="confirm-screen">
+          <div class="check-big">✓</div>
+          <h2>Payment elections updated</h2>
+          <p>Workday saved your changes. Your <strong>May 15</strong> paycheck will still land 100% in Chase while Ally's pre-note clears. Starting <strong>May 29</strong>, $1,025 routes to Ally Savings and the balance to Chase Checking.</p>
+          <div class="summary-card">
+            <h4>Direct Deposit · Effective May 15, 2026</h4>
+            <div class="summary-row">
+              <div class="k">1.</div>
+              <div class="desc">Ally Savings ····2031 — Fixed amount</div>
+              <div class="amt">$1,025.00</div>
+            </div>
+            <div class="summary-row">
+              <div class="k">2.</div>
+              <div class="desc">Chase Checking ····4291 — Remaining balance</div>
+              <div class="amt">Balance</div>
+            </div>
+            <div class="summary-grand">
+              <div>Net paycheck distribution</div>
+              <div class="v">100%</div>
+            </div>
+          </div>
+          <div class="approval-line">
+            <div class="dot"></div>
+            Audit logged · Pre-note sent to Ally · You'll get a notification once verification completes (~6 business days)
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">8</span>
+        All set. The new split kicks in once Ally's pre-note clears — typically by the pay run after next.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  <p>Tutorial reproduces a typical Workday Worker self-service flow for adding a bank account and editing Payment Elections. Field labels (e.g. "Account Nickname", "Routing Transit Number", "Account Number", "Effective Date"), the Accounts → Elections layout, and the pre-note verification step follow Workday's published task pattern. Specific bank pre-note durations (1–2 pay cycles is typical), the Distribution Order priority logic, and NACHA authorization wording are payroll-configuration- and country-dependent. Sources: Workday Community help articles "Manage Payment Elections" and "Add Account", and university job aids (e.g., Yale, Stanford, UC system Workday training pages on payment elections and direct deposit).</p>
+</footer>
+
+<script>
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const TOTAL = screens.length;
+  const stepLabel = document.getElementById('stepLabel');
+  const cursor = document.getElementById('cursor');
+  const playBtn = document.getElementById('playBtn');
+
+  let current = 0;
+  let playing = true;
+  let timer = null;
+  let cursorTimers = [];
+
+  // Duration per step in ms
+  const DURATIONS = [3800, 4400, 4400, 5600, 4600, 5200, 5000, 5200];
+
+  function clearCursorTimers() {
+    cursorTimers.forEach(t => clearTimeout(t));
+    cursorTimers = [];
+  }
+
+  function moveCursorTo(x, y, clickAfter = true) {
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    if (clickAfter) {
+      const t = setTimeout(() => {
+        cursor.classList.add('click');
+        const t2 = setTimeout(() => cursor.classList.remove('click'), 520);
+        cursorTimers.push(t2);
+      }, 720);
+      cursorTimers.push(t);
+    }
+  }
+
+  function offsetInStage(el) {
+    const stage = document.getElementById('stage');
+    const sr = stage.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return { x: er.left - sr.left + er.width / 2 - 11, y: er.top - sr.top + er.height / 2 - 11 };
+  }
+
+  function showTimedToast(screen, id, delay = 1400) {
+    const toast = screen.querySelector('#' + id);
+    if (!toast) return;
+    const t = setTimeout(() => toast.classList.add('show'), delay);
+    cursorTimers.push(t);
+  }
+
+  function animateStep(i) {
+    clearCursorTimers();
+    cursor.style.left = '-40px';
+    cursor.style.top = '-40px';
+
+    document.querySelectorAll('.toast.show').forEach(t => t.classList.remove('show'));
+
+    const screen = screens[i];
+    const t = setTimeout(() => {
+      switch (i) {
+        case 0: {
+          const el = screen.querySelector('#payTile');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 1: {
+          const el = screen.querySelector('#paymentElectionsItem');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 2: {
+          const el = screen.querySelector('#addAcctBtn');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 3: {
+          // hover nickname → routing → OK
+          const nick = screen.querySelector('#nicknameField');
+          if (nick) { const p = offsetInStage(nick); moveCursorTo(p.x, p.y, false); }
+          const t2 = setTimeout(() => {
+            const r = screen.querySelector('#routingField');
+            if (r) { const q = offsetInStage(r); moveCursorTo(q.x, q.y, false); }
+          }, 1800);
+          const t3 = setTimeout(() => {
+            const ok = screen.querySelector('#saveAcctBtn');
+            if (ok) { const q = offsetInStage(ok); moveCursorTo(q.x, q.y); }
+          }, 4200);
+          cursorTimers.push(t2, t3);
+          break;
+        }
+        case 4: {
+          const el = screen.querySelector('#changeElectionBtn');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 5: {
+          const el = screen.querySelector('#reviewBtn');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 6: {
+          const ok = screen.querySelector('#submitBtn7');
+          if (ok) { const p = offsetInStage(ok); moveCursorTo(p.x, p.y); }
+          showTimedToast(screen, 'toastSubmitted', 1900);
+          break;
+        }
+        case 7: {
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+      }
+    }, 250);
+    cursorTimers.push(t);
+  }
+
+  function showStep(i) {
+    current = ((i % TOTAL) + TOTAL) % TOTAL;
+    screens.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    stepLabel.textContent = `Step ${current + 1} / ${TOTAL}`;
+    animateStep(current);
+  }
+
+  function tick() {
+    if (!playing) return;
+    const dur = DURATIONS[current] || 4000;
+    timer = setTimeout(() => {
+      showStep(current + 1);
+      tick();
+    }, dur);
+  }
+
+  function stopTick() {
+    if (timer) { clearTimeout(timer); timer = null; }
+  }
+
+  function togglePlay() {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    if (playing) tick();
+    else stopTick();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    stopTick(); showStep(0); if (playing) tick();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    stopTick(); showStep(current - 1); if (playing) tick();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    stopTick(); showStep(current + 1); if (playing) tick();
+  });
+
+  showStep(0);
+  tick();
+</script>
+
+</body>
+</html>
