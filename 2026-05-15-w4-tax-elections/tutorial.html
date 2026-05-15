@@ -1,0 +1,1222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Workday HRM Tutorial — W-4 / Federal Tax Elections (2026-05-15)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+  :root {
+    --wd-orange: #f38b00;
+    --wd-blue:   #0875e1;
+    --wd-navy:   #152935;
+    --wd-bg:     #f2f4f7;
+    --wd-line:   #dadde2;
+    --wd-text:   #25313d;
+    --wd-muted:  #6b7684;
+    --wd-green:  #2e8540;
+    --wd-amber:  #b8860b;
+    --wd-red:    #b1342f;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: var(--wd-text); background: #101418; }
+
+  header.page {
+    padding: 18px 24px; background: #0b0f13; color: #fff;
+    border-bottom: 1px solid #1d242c;
+  }
+  header.page h1 { margin: 0 0 4px; font-size: 18px; font-weight: 600; }
+  header.page p  { margin: 0; font-size: 13px; color: #9aa6b2; }
+  header.page .badge {
+    display: inline-block; background: var(--wd-orange); color: #fff;
+    font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 3px; margin-right: 8px; letter-spacing: 0.4px;
+  }
+
+  .stage-wrap { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .controls {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 12px; color: #cdd4dc; font-size: 13px;
+  }
+  .controls button {
+    background: var(--wd-blue); color: #fff; border: none; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 13px;
+  }
+  .controls button.secondary { background: #334352; }
+  .step-label { margin-left: auto; font-variant-numeric: tabular-nums; }
+
+  .stage {
+    position: relative; width: 100%; aspect-ratio: 16 / 10;
+    background: var(--wd-bg); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.45);
+    border: 1px solid #1d242c;
+  }
+  .screen {
+    position: absolute; inset: 0;
+    opacity: 0; visibility: hidden;
+    transition: opacity 420ms ease;
+  }
+  .screen.active { opacity: 1; visibility: visible; }
+
+  /* ---------- Workday chrome ---------- */
+  .wd-topbar {
+    height: 48px; background: var(--wd-navy); color: #fff;
+    display: flex; align-items: center; padding: 0 14px; gap: 14px;
+    font-size: 13px;
+  }
+  .wd-topbar .menu-icon {
+    width: 22px; height: 16px; display: inline-flex; flex-direction: column; justify-content: space-between;
+  }
+  .wd-topbar .menu-icon span { display: block; height: 2px; background: #fff; border-radius: 2px; }
+  .wd-topbar .logo { font-weight: 700; letter-spacing: 0.5px; color: var(--wd-orange); }
+  .wd-topbar .search {
+    flex: 1; max-width: 420px; background: #24333f; border-radius: 3px; padding: 6px 10px; color: #aeb8c3; font-size: 12px;
+  }
+  .wd-topbar .right { margin-left: auto; display: flex; gap: 12px; align-items: center; color: #c8d2dc; }
+  .wd-avatar {
+    width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#ffb46b,#f38b00);
+    display: grid; place-items: center; color: #fff; font-size: 12px; font-weight: 700;
+  }
+  .wd-body { position: absolute; top: 48px; bottom: 0; left: 0; right: 0; overflow: hidden; }
+
+  /* ---------- Home dashboard ---------- */
+  .dashboard {
+    padding: 24px 28px; background: linear-gradient(#f7f9fc, #eef2f7); height: 100%;
+  }
+  .dash-hello { font-size: 22px; font-weight: 600; margin: 0 0 4px; }
+  .dash-sub { color: var(--wd-muted); font-size: 13px; margin: 0 0 22px; }
+  .apps-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; }
+  .app-tile {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 10px; text-align: center; font-size: 12px; color: var(--wd-text);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04); cursor: pointer;
+    transition: border-color 200ms ease, box-shadow 200ms ease;
+  }
+  .app-tile.hl { border-color: var(--wd-blue); box-shadow: 0 0 0 2px rgba(8,117,225,0.15); }
+  .app-tile .icon {
+    width: 34px; height: 34px; border-radius: 8px; margin: 0 auto 8px;
+    display: grid; place-items: center; color: #fff; font-size: 16px; font-weight: 700;
+  }
+  .ic-personal { background: #2a8fbd; }
+  .ic-pay      { background: #6a4fb6; }
+  .ic-time     { background: #2e8540; }
+  .ic-benefits { background: #b65c24; }
+  .ic-learning { background: #0875e1; }
+  .ic-expense  { background: #d2622f; }
+  .ic-career   { background: #c23878; }
+
+  /* ---------- Pay landing ---------- */
+  .pay-landing { padding: 22px 28px; background: #fff; height: 100%; overflow: hidden; }
+  .page-title { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .page-title h2 { margin: 0; font-size: 18px; font-weight: 600; }
+  .page-title .crumb { color: var(--wd-muted); font-size: 12px; }
+
+  .pay-actions {
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: 18px; height: calc(100% - 50px);
+  }
+  .pay-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    overflow: hidden; display: flex; flex-direction: column;
+  }
+  .pay-card h3 {
+    margin: 0; padding: 12px 14px; border-bottom: 1px solid var(--wd-line);
+    font-size: 12px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700; background: #fafbfc;
+  }
+  .menu-list { display: flex; flex-direction: column; }
+  .menu-list .item {
+    padding: 12px 16px; border-bottom: 1px solid var(--wd-line);
+    font-size: 13px; display: flex; align-items: center; gap: 10px;
+    color: var(--wd-blue); cursor: pointer;
+    transition: background 150ms ease;
+  }
+  .menu-list .item:last-child { border-bottom: none; }
+  .menu-list .item:hover, .menu-list .item.hl {
+    background: #eaf4ff;
+  }
+  .menu-list .item .ic {
+    width: 22px; height: 22px; border-radius: 4px; flex-shrink: 0;
+    background: rgba(8,117,225,0.12);
+    display: grid; place-items: center; color: var(--wd-blue);
+    font-size: 12px; font-weight: 700;
+  }
+  .menu-list .item .label { flex: 1; }
+  .menu-list .item .meta { color: var(--wd-muted); font-size: 11px; }
+
+  .with-stats {
+    background: linear-gradient(135deg,#ecf2fb,#e3edf9);
+    border: 1px solid #c9d6e9; border-radius: 6px;
+    padding: 14px 18px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .with-stats h4 {
+    margin: 0; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-blue);
+  }
+  .with-stats .row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed #c9d6e9; font-size: 12px; }
+  .with-stats .row:last-child { border-bottom: none; }
+  .with-stats .row .k { color: var(--wd-muted); }
+  .with-stats .row .v { font-weight: 700; color: var(--wd-text); }
+
+  /* ---------- Generic page chrome ---------- */
+  .page-screen {
+    padding: 22px 28px; background: #fff; height: 100%; overflow: hidden;
+    display: grid; grid-template-rows: auto 1fr auto; gap: 12px;
+  }
+  .pi-toolbar {
+    display: flex; gap: 10px; align-items: center; padding: 4px 0;
+  }
+  .pi-toolbar .crumb-row { display: flex; align-items: center; gap: 8px; }
+  .pi-toolbar .crumb-row h2 { margin: 0; font-size: 17px; font-weight: 600; }
+  .pi-toolbar .crumb-row .crumb { color: var(--wd-muted); font-size: 12px; }
+  .pi-toolbar .actions { margin-left: auto; display: flex; gap: 8px; }
+
+  .btn-primary {
+    background: var(--wd-blue); color: #fff; border: none; padding: 8px 14px; border-radius: 3px;
+    font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-primary:disabled { background: #b9c5d1; cursor: default; }
+  .btn-ghost {
+    background: #fff; color: var(--wd-blue); border: 1px solid var(--wd-blue);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 600; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .btn-cancel {
+    background: #fff; color: var(--wd-text); border: 1px solid var(--wd-line);
+    padding: 7px 13px; border-radius: 3px; font-size: 13px; font-weight: 500; cursor: pointer;
+  }
+
+  /* ---------- Tax Elections current-state cards ---------- */
+  .te-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0;
+  }
+  .te-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  .te-card .h {
+    padding: 10px 14px; background: #fafbfc; border-bottom: 1px solid var(--wd-line);
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.6px;
+    color: var(--wd-muted); font-weight: 700; display: flex; align-items: center; gap: 8px;
+  }
+  .te-card .h .flag {
+    width: 22px; height: 14px; border-radius: 2px; background:
+      linear-gradient(180deg, #b22234 0%, #b22234 33%, #fff 33%, #fff 66%, #3c3b6e 66%, #3c3b6e 100%);
+    border: 1px solid var(--wd-line);
+  }
+  .te-card .h .ct-flag {
+    width: 22px; height: 14px; border-radius: 2px; background: #06366c;
+    display: grid; place-items: center; color: #fff; font-size: 8px; font-weight: 700;
+  }
+  .te-card .b { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; }
+  .te-card .b .kv { display: flex; justify-content: space-between; font-size: 12px; padding: 5px 0; border-bottom: 1px dashed var(--wd-line); }
+  .te-card .b .kv:last-of-type { border-bottom: none; }
+  .te-card .b .kv .k { color: var(--wd-muted); }
+  .te-card .b .kv .v { color: var(--wd-text); font-weight: 600; }
+  .te-card .f {
+    padding: 8px 14px; background: #fafbfc; border-top: 1px solid var(--wd-line);
+    display: flex; gap: 8px; align-items: center;
+  }
+  .te-card .f .upd {
+    background: var(--wd-blue); color: #fff; border: none;
+    padding: 6px 14px; border-radius: 3px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: box-shadow 200ms ease;
+  }
+  .te-card .f .upd.hl { box-shadow: 0 0 0 4px rgba(8,117,225,0.15); }
+  .te-card .f .stamp { font-size: 11px; color: var(--wd-muted); margin-left: auto; }
+
+  .estimate-band {
+    background: linear-gradient(135deg,#fff8ec,#ffefd2);
+    border: 1px solid #f5d6a8; border-radius: 6px;
+    padding: 10px 14px; font-size: 12px; color: var(--wd-text);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .estimate-band .pic {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--wd-amber);
+    color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 12px; flex-shrink: 0;
+  }
+
+  /* ---------- W-4 form ---------- */
+  .w4-form {
+    display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: auto;
+    padding-right: 4px;
+  }
+  .w4-section {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px; overflow: hidden;
+  }
+  .w4-section .sh {
+    padding: 10px 14px; background: linear-gradient(180deg,#f6f9fd,#eef3fa);
+    border-bottom: 1px solid var(--wd-line);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .w4-section .sh .step-no {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--wd-blue);
+    color: #fff; font-size: 11px; font-weight: 700;
+    display: grid; place-items: center; flex-shrink: 0;
+  }
+  .w4-section .sh .step-no.gray { background: #b9c5d1; }
+  .w4-section .sh .step-no.amber { background: var(--wd-amber); }
+  .w4-section .sh .step-no.green { background: var(--wd-green); }
+  .w4-section .sh .title { font-size: 13px; font-weight: 700; color: var(--wd-text); }
+  .w4-section .sh .sub  { font-size: 11px; color: var(--wd-muted); margin-left: auto; }
+  .w4-section .sb {
+    padding: 12px 14px; display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .field { display: flex; flex-direction: column; gap: 3px; }
+  .field label {
+    font-size: 11px; color: var(--wd-muted);
+    text-transform: uppercase; letter-spacing: 0.5px;
+    font-weight: 600;
+  }
+  .field label .req { color: var(--wd-red); margin-left: 2px; }
+  .input, .select {
+    padding: 8px 10px; font-size: 13px;
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 3px;
+    color: var(--wd-text); min-height: 32px;
+    display: flex; align-items: center;
+  }
+  .input.readonly { background: #f3f6fa; color: var(--wd-muted); }
+  .input.focused {
+    border-color: var(--wd-blue); box-shadow: 0 0 0 3px rgba(8,117,225,0.15);
+    background: #fafdff;
+  }
+  .input.changed { border-color: var(--wd-amber); background: #fffbf0; }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .field-row.three { grid-template-columns: 1fr 1fr 1fr; }
+  .helper { font-size: 11px; color: var(--wd-muted); }
+  .helper.amber { color: var(--wd-amber); }
+  .helper.green { color: var(--wd-green); }
+
+  .filing-radio {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+  }
+  .filing-radio .opt {
+    border: 1px solid var(--wd-line); border-radius: 4px;
+    padding: 10px 12px; cursor: pointer; font-size: 12px;
+    display: flex; align-items: flex-start; gap: 8px;
+    background: #fff; transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease;
+  }
+  .filing-radio .opt .dot {
+    width: 14px; height: 14px; border-radius: 50%; border: 2px solid #b9c5d1;
+    flex-shrink: 0; position: relative; margin-top: 1px; background: #fff;
+  }
+  .filing-radio .opt.selected {
+    border-color: var(--wd-blue); background: #f3f8fe; box-shadow: 0 0 0 2px rgba(8,117,225,0.12);
+  }
+  .filing-radio .opt.selected .dot { border-color: var(--wd-blue); }
+  .filing-radio .opt.selected .dot::after {
+    content: ''; position: absolute; inset: 2px; border-radius: 50%; background: var(--wd-blue);
+  }
+  .filing-radio .opt .lbl { font-weight: 600; color: var(--wd-text); }
+  .filing-radio .opt .sub { font-size: 10px; color: var(--wd-muted); margin-top: 2px; line-height: 1.3; }
+  .filing-radio .opt.selected .sub { color: var(--wd-text); }
+
+  .dep-grid {
+    display: grid; grid-template-columns: 1.4fr 90px 110px 120px; gap: 8px; align-items: end;
+  }
+  .dep-grid .head {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;
+    color: var(--wd-muted); font-weight: 700;
+    padding-bottom: 4px; border-bottom: 1px solid var(--wd-line);
+  }
+  .dep-grid .head.r { text-align: right; }
+  .dep-grid .lbl { font-size: 13px; color: var(--wd-text); padding: 4px 0; }
+  .dep-grid .num {
+    border: 1px solid var(--wd-line); border-radius: 3px; padding: 5px 8px;
+    background: #fff; font-size: 13px; text-align: right; font-variant-numeric: tabular-nums;
+  }
+  .dep-grid .num.changed { background: #fffbf0; border-color: var(--wd-amber); font-weight: 700; }
+  .dep-grid .ro {
+    font-size: 13px; color: var(--wd-muted); text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .dep-grid .total {
+    font-size: 14px; color: var(--wd-blue); font-weight: 700; text-align: right;
+    font-variant-numeric: tabular-nums;
+  }
+  .dep-total-row {
+    margin-top: 8px; padding-top: 8px; border-top: 2px solid var(--wd-navy);
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .dep-total-row .lbl { font-size: 12px; font-weight: 700; color: var(--wd-text); text-transform: uppercase; letter-spacing: 0.3px; }
+  .dep-total-row .v   { font-size: 18px; color: var(--wd-blue); font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* multi-jobs checkbox row */
+  .check-row {
+    display: flex; align-items: flex-start; gap: 10px;
+    padding: 8px 10px; border: 1px solid var(--wd-line); border-radius: 4px;
+    background: #fafbfc;
+  }
+  .check-row.checked { background: #f0f7ee; border-color: var(--wd-green); }
+  .check-row .cb {
+    width: 16px; height: 16px; border: 2px solid #b9c5d1; border-radius: 3px; flex-shrink: 0;
+    margin-top: 1px; background: #fff; display: grid; place-items: center;
+    font-size: 10px; color: #fff; font-weight: 700;
+  }
+  .check-row.checked .cb { background: var(--wd-green); border-color: var(--wd-green); }
+  .check-row.checked .cb::after { content: '✓'; }
+  .check-row .txt { font-size: 12px; color: var(--wd-text); line-height: 1.4; }
+  .check-row .txt strong { color: var(--wd-text); }
+
+  /* withholding estimate inline */
+  .wh-estimate {
+    background: linear-gradient(135deg,#eef6ee,#dff0df);
+    border: 1px solid #b7ddb7; border-radius: 6px;
+    padding: 10px 14px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px;
+    align-items: center; font-size: 12px;
+  }
+  .wh-estimate .ic {
+    width: 28px; height: 28px; border-radius: 50%; background: var(--wd-green);
+    color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 14px;
+  }
+  .wh-estimate .v { font-weight: 700; color: var(--wd-text); font-size: 14px; font-variant-numeric: tabular-nums; }
+
+  /* ---------- Review (before/after) ---------- */
+  .review-grid {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 14px; min-height: 0; overflow: auto;
+  }
+  .review-card {
+    background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 16px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .review-card h4 {
+    margin: 0 0 4px; font-size: 12px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-muted); padding-bottom: 6px; border-bottom: 1px solid var(--wd-line);
+  }
+  .kv { display: flex; justify-content: space-between; font-size: 12px; padding: 4px 0; }
+  .kv .k { color: var(--wd-muted); }
+  .kv .v { color: var(--wd-text); font-weight: 600; }
+  .kv.delta .v { color: var(--wd-amber); }
+  .kv.green  .v { color: var(--wd-green); }
+  .compare-row {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    background: #fafbfc; border: 1px solid var(--wd-line); border-radius: 4px;
+    padding: 10px 12px;
+  }
+  .compare-row .col { display: flex; flex-direction: column; gap: 3px; }
+  .compare-row .col .lbl {
+    font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px;
+    color: var(--wd-muted); font-weight: 700;
+  }
+  .compare-row .col .v { font-size: 18px; font-weight: 700; color: var(--wd-text); font-variant-numeric: tabular-nums; }
+  .compare-row .col.after .v { color: var(--wd-amber); }
+  .compare-arrow {
+    text-align: center; font-size: 18px; color: var(--wd-blue); align-self: center;
+  }
+
+  .auth-note {
+    background: linear-gradient(135deg,#fffaf0,#fef0e0);
+    border: 1px solid #f5d6a8; border-radius: 6px;
+    padding: 10px 14px; font-size: 12px; color: var(--wd-text);
+    display: flex; align-items: flex-start; gap: 10px;
+  }
+  .auth-note .pic {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--wd-amber);
+    color: #fff; display: grid; place-items: center; flex-shrink: 0; font-weight: 700; font-size: 13px;
+  }
+
+  /* ---------- Toast ---------- */
+  .toast {
+    position: absolute; left: 50%; bottom: 70px; transform: translate(-50%, 20px);
+    background: var(--wd-navy); color: #fff; padding: 10px 16px;
+    border-radius: 6px; font-size: 13px; box-shadow: 0 12px 24px rgba(0,0,0,0.4);
+    display: flex; align-items: center; gap: 10px;
+    opacity: 0; transition: opacity 320ms ease, transform 320ms ease;
+    border-left: 4px solid var(--wd-green);
+    z-index: 30;
+  }
+  .screen.active .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast .check { width: 22px; height: 22px; border-radius: 50%; background: var(--wd-green); color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 13px; }
+
+  /* ---------- Confirmation ---------- */
+  .confirm-screen {
+    padding: 36px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    text-align: center; background: linear-gradient(#fbfdff, #f0f6fd); height: 100%;
+  }
+  .check-big {
+    width: 78px; height: 78px; border-radius: 50%; background: var(--wd-green);
+    color: #fff; display: grid; place-items: center; font-size: 40px; font-weight: 700;
+    box-shadow: 0 8px 18px rgba(46,133,64,0.3);
+    animation: pop 600ms ease;
+  }
+  @keyframes pop {
+    0% { transform: scale(0.4); opacity: 0; }
+    60% { transform: scale(1.08); opacity: 1; }
+    100% { transform: scale(1); }
+  }
+  .confirm-screen h2 { margin: 16px 0 6px; font-size: 22px; }
+  .confirm-screen p  { margin: 0; color: var(--wd-muted); font-size: 13px; max-width: 600px; }
+  .summary-card {
+    margin-top: 18px; background: #fff; border: 1px solid var(--wd-line); border-radius: 6px;
+    padding: 14px 18px; min-width: 560px; text-align: left;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.06);
+  }
+  .summary-card h4 {
+    margin: 0 0 8px; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.5px; color: var(--wd-muted);
+  }
+  .summary-row {
+    display: grid; grid-template-columns: 1fr 140px;
+    gap: 10px; padding: 5px 0; border-bottom: 1px dashed var(--wd-line);
+    font-size: 12px; align-items: baseline;
+  }
+  .summary-row .desc { color: var(--wd-text); }
+  .summary-row .amt  { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: var(--wd-text); }
+  .summary-grand {
+    display: grid; grid-template-columns: 1fr 140px; gap: 10px;
+    padding: 8px 0 2px; font-size: 13px; font-weight: 700;
+    border-top: 2px solid var(--wd-navy); margin-top: 4px;
+  }
+  .summary-grand .v { color: var(--wd-amber); text-align: right; font-variant-numeric: tabular-nums; }
+  .approval-line {
+    margin-top: 12px; font-size: 12px; color: var(--wd-muted); display: flex; gap: 8px; align-items: center;
+  }
+  .approval-line .dot {
+    width: 8px; height: 8px; border-radius: 50%; background: var(--wd-green);
+  }
+
+  /* state-tax callout */
+  .state-callout {
+    margin-top: 12px; padding: 10px 14px;
+    background: #fff7e8; border: 1px solid #f0d49a; border-radius: 6px;
+    color: var(--wd-text); font-size: 12px;
+    display: flex; align-items: center; gap: 10px; max-width: 600px;
+  }
+  .state-callout .pic {
+    width: 22px; height: 22px; border-radius: 50%; background: var(--wd-amber);
+    color: #fff; display: grid; place-items: center; font-weight: 700; font-size: 12px; flex-shrink: 0;
+  }
+
+  /* ---------- Cursor ---------- */
+  .cursor {
+    position: absolute; width: 22px; height: 22px; z-index: 50;
+    left: -40px; top: -40px;
+    pointer-events: none;
+    transition: left 700ms cubic-bezier(0.22, 0.61, 0.36, 1), top 700ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+  .cursor svg { display: block; filter: drop-shadow(0 1px 2px rgba(0,0,0,0.35)); }
+  .cursor.click::after {
+    content: ""; position: absolute; left: 2px; top: 2px; width: 22px; height: 22px;
+    border-radius: 50%; border: 2px solid rgba(8,117,225,0.6);
+    animation: ring 500ms ease-out;
+  }
+  @keyframes ring {
+    0%   { transform: scale(0.4); opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
+  }
+
+  /* ---------- Narration ---------- */
+  .narration {
+    position: absolute; left: 16px; bottom: 16px; right: 16px;
+    background: rgba(21,41,53,0.94); color: #fff; padding: 10px 14px;
+    border-radius: 6px; font-size: 13px; line-height: 1.4;
+    display: flex; align-items: flex-start; gap: 10px;
+    border-left: 4px solid var(--wd-orange);
+    z-index: 40;
+  }
+  .narration .n {
+    background: var(--wd-orange); color: #fff; font-weight: 700; font-size: 11px;
+    padding: 2px 8px; border-radius: 999px; flex-shrink: 0;
+  }
+
+  /* type-in reveal */
+  .reveal-new {
+    display: inline-block; overflow: hidden; white-space: nowrap;
+    width: 0; color: var(--wd-amber); font-weight: 600;
+  }
+  .screen.active .reveal-new.r1 { animation: lineIn 700ms steps(8, end) 600ms forwards; }
+  .screen.active .reveal-new.r2 { animation: lineIn 700ms steps(7, end) 1700ms forwards; }
+  .screen.active .reveal-new.r3 { animation: lineIn 700ms steps(4, end) 2800ms forwards; }
+  @keyframes lineIn {
+    from { width: 0; }
+    to   { width: var(--target-w, 100%); }
+  }
+
+  footer.page {
+    max-width: 1100px; margin: 14px auto 40px; padding: 0 16px;
+    color: #8b97a3; font-size: 12px; line-height: 1.5;
+  }
+  footer.page a { color: #9ec3ea; }
+</style>
+</head>
+<body>
+
+<header class="page">
+  <h1><span class="badge">Workday HRM</span> W-4 / Federal Tax Elections — Animated Walkthrough</h1>
+  <p>Daily tutorial · 2026-05-15 · Based on public Workday documentation, IRS Form W-4 (2025), and partner-published job aids.</p>
+</header>
+
+<div class="stage-wrap">
+  <div class="controls">
+    <button id="playBtn">Pause</button>
+    <button class="secondary" id="restartBtn">Restart</button>
+    <button class="secondary" id="prevBtn">&lsaquo; Prev</button>
+    <button class="secondary" id="nextBtn">Next &rsaquo;</button>
+    <div class="step-label" id="stepLabel">Step 1 / 8</div>
+  </div>
+
+  <div class="stage" id="stage">
+
+    <!-- Cursor overlay -->
+    <div class="cursor" id="cursor">
+      <svg width="22" height="22" viewBox="0 0 22 22" xmlns="http://www.w3.org/2000/svg">
+        <path d="M2 2 L2 18 L7 14 L10 20 L13 19 L10 13 L17 13 Z" fill="#ffffff" stroke="#152935" stroke-width="1.2" stroke-linejoin="round"/>
+      </svg>
+    </div>
+
+    <!-- ============ STEP 1 — HOME DASHBOARD ============ -->
+    <div class="screen" data-step="1">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="dashboard">
+          <h2 class="dash-hello">Good morning, Jordan</h2>
+          <p class="dash-sub">Friday, May 15, 2026 · Tax time prep — let's update your federal W-4 so the right amount comes out of each paycheck.</p>
+          <div class="apps-grid">
+            <div class="app-tile" id="payTile"><div class="icon ic-pay">$</div>Pay</div>
+            <div class="app-tile"><div class="icon ic-expense">$</div>Expenses</div>
+            <div class="app-tile"><div class="icon ic-time">T</div>Time</div>
+            <div class="app-tile"><div class="icon ic-personal">P</div>Personal</div>
+            <div class="app-tile"><div class="icon ic-benefits">B</div>Benefits</div>
+            <div class="app-tile"><div class="icon ic-learning">L</div>Learning</div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">1</span>
+        From your Workday home, click the <strong>Pay</strong> app tile to open the pay hub where Tax Elections live.
+      </div>
+    </div>
+
+    <!-- ============ STEP 2 — PAY LANDING ============ -->
+    <div class="screen" data-step="2">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="pay-landing">
+          <div class="page-title">
+            <h2>Pay</h2>
+            <span class="crumb">› Worker Hub</span>
+          </div>
+          <div class="pay-actions">
+            <div class="pay-card">
+              <h3>Tasks</h3>
+              <div class="menu-list">
+                <div class="item"><div class="ic">P</div><span class="label">Payslips</span><span class="meta">12 available · YTD</span></div>
+                <div class="item"><div class="ic">D</div><span class="label">Payment Elections</span><span class="meta">2 accounts · pre-note clearing</span></div>
+                <div class="item hl" id="taxElectionsItem"><div class="ic">T</div><span class="label">Tax Elections</span><span class="meta">W-4 · State withholdings</span></div>
+                <div class="item"><div class="ic">B</div><span class="label">Bonus &amp; One-Time Payments</span><span class="meta">Sign-on, referral, retention</span></div>
+                <div class="item"><div class="ic">Y</div><span class="label">Year-to-Date Summary</span><span class="meta">Earnings, deductions, taxes</span></div>
+              </div>
+            </div>
+            <div class="with-stats">
+              <h4>Last Paycheck Withholding · May 1, 2026</h4>
+              <div class="row"><span class="k">Federal income tax</span><span class="v">$412.18</span></div>
+              <div class="row"><span class="k">FICA (Social Security + Medicare)</span><span class="v">$292.04</span></div>
+              <div class="row"><span class="k">CT state income tax</span><span class="v">$148.91</span></div>
+              <div class="row"><span class="k">Effective federal rate</span><span class="v">10.8%</span></div>
+              <div class="row"><span class="k">YTD federal withheld</span><span class="v">$3,710.62</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">2</span>
+        Under <strong>Tasks</strong>, click <strong>Tax Elections</strong> to manage your federal W-4 and state withholding.
+      </div>
+    </div>
+
+    <!-- ============ STEP 3 — TAX ELECTIONS LANDING ============ -->
+    <div class="screen" data-step="3">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Tax Elections</h2>
+              <span class="crumb">› Jordan Mitchell · Worker</span>
+            </div>
+          </div>
+          <div style="display: flex; flex-direction: column; gap: 12px; min-height: 0; overflow: hidden;">
+            <div class="estimate-band">
+              <div class="pic">!</div>
+              <div>You've withheld <strong>$3,710.62</strong> federal YTD. At current pace you'll under-withhold by ≈ $640 vs. last year's refund. Consider updating your W-4.</div>
+            </div>
+            <div class="te-grid">
+              <div class="te-card">
+                <div class="h"><div class="flag"></div>Federal — Form W-4</div>
+                <div class="b">
+                  <div class="kv"><span class="k">Filing Status</span><span class="v">Single</span></div>
+                  <div class="kv"><span class="k">Multiple Jobs (Step 2c)</span><span class="v">Not checked</span></div>
+                  <div class="kv"><span class="k">Dependents (Step 3)</span><span class="v">$0.00</span></div>
+                  <div class="kv"><span class="k">Extra Withholding (Step 4c)</span><span class="v">$0.00 / pay</span></div>
+                  <div class="kv"><span class="k">Form Version</span><span class="v">W-4 (2025)</span></div>
+                </div>
+                <div class="f">
+                  <button class="upd hl" id="updateFedBtn">Update</button>
+                  <span class="stamp">Last updated Jan 14, 2024</span>
+                </div>
+              </div>
+              <div class="te-card">
+                <div class="h"><div class="ct-flag">CT</div>Connecticut — CT-W4</div>
+                <div class="b">
+                  <div class="kv"><span class="k">Filing Status (Code)</span><span class="v">F · Single</span></div>
+                  <div class="kv"><span class="k">Reduced Withholding</span><span class="v">$0.00</span></div>
+                  <div class="kv"><span class="k">Additional Withholding</span><span class="v">$0.00 / pay</span></div>
+                  <div class="kv"><span class="k">Exempt?</span><span class="v">No</span></div>
+                  <div class="kv"><span class="k">Form Version</span><span class="v">CT-W4 (2025)</span></div>
+                </div>
+                <div class="f">
+                  <button class="upd">Update</button>
+                  <span class="stamp">Last updated Jan 14, 2024</span>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div style="display:flex; justify-content: space-between; align-items: center; font-size: 11px; color: var(--wd-muted);">
+            <span>Tax Elections take effect on the next pay run after submission.</span>
+            <span>Workday e-signature replaces a paper W-4.</span>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">3</span>
+        Your federal W-4 is on the left (Single, no dependents). Click <strong>Update</strong> to start a new federal Form W-4.
+      </div>
+    </div>
+
+    <!-- ============ STEP 4 — W-4 STEP 1 (PERSONAL + FILING STATUS) ============ -->
+    <div class="screen" data-step="4">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Federal Withholding Elections (W-4)</h2>
+              <span class="crumb">› Step 1 — Personal Information</span>
+            </div>
+            <div class="actions">
+              <button class="btn-cancel">Cancel</button>
+              <button class="btn-primary">Continue</button>
+            </div>
+          </div>
+          <div class="w4-form">
+            <div class="w4-section">
+              <div class="sh">
+                <div class="step-no">1</div>
+                <div class="title">Step 1 — Enter Personal Information</div>
+                <div class="sub">Pre-filled from your Worker profile</div>
+              </div>
+              <div class="sb">
+                <div class="field-row">
+                  <div class="field">
+                    <label>Full Name</label>
+                    <div class="input readonly">Jordan A. Mitchell</div>
+                  </div>
+                  <div class="field">
+                    <label>Social Security Number</label>
+                    <div class="input readonly">•••-••-4421</div>
+                  </div>
+                </div>
+                <div class="field">
+                  <label>Home Address</label>
+                  <div class="input readonly">218 Whitney Ave, Apt 4B · New Haven, CT 06511</div>
+                </div>
+                <div class="field" style="margin-top: 4px;">
+                  <label>Filing Status <span class="req">*</span></label>
+                  <div class="filing-radio">
+                    <div class="opt">
+                      <div class="dot"></div>
+                      <div>
+                        <div class="lbl">Single</div>
+                        <div class="sub">Or married filing separately</div>
+                      </div>
+                    </div>
+                    <div class="opt selected" id="filingMFJ">
+                      <div class="dot"></div>
+                      <div>
+                        <div class="lbl">Married filing jointly</div>
+                        <div class="sub">Or qualifying surviving spouse</div>
+                      </div>
+                    </div>
+                    <div class="opt">
+                      <div class="dot"></div>
+                      <div>
+                        <div class="lbl">Head of household</div>
+                        <div class="sub">Unmarried, paying &gt;½ household costs</div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="helper amber">Changing filing status from Single → Married filing jointly will lower per-paycheck federal withholding ≈ $147.</div>
+                </div>
+              </div>
+            </div>
+            <div class="w4-section">
+              <div class="sh">
+                <div class="step-no gray">2</div>
+                <div class="title">Step 2 — Multiple Jobs or Spouse Works</div>
+                <div class="sub">Continue to next step</div>
+              </div>
+            </div>
+            <div class="w4-section">
+              <div class="sh">
+                <div class="step-no gray">3</div>
+                <div class="title">Step 3 — Claim Dependents</div>
+                <div class="sub">Continue to next step</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">4</span>
+        Jordan got married this year. Switch filing status from <strong>Single</strong> to <strong>Married filing jointly</strong>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 5 — W-4 STEP 2 (MULTIPLE JOBS) + STEP 3 (DEPENDENTS) ============ -->
+    <div class="screen" data-step="5">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Federal Withholding Elections (W-4)</h2>
+              <span class="crumb">› Steps 2 &amp; 3 — Jobs &amp; Dependents</span>
+            </div>
+            <div class="actions">
+              <button class="btn-cancel">Back</button>
+              <button class="btn-primary">Continue</button>
+            </div>
+          </div>
+          <div class="w4-form">
+            <div class="w4-section">
+              <div class="sh">
+                <div class="step-no green">2</div>
+                <div class="title">Step 2 — Multiple Jobs or Spouse Works</div>
+                <div class="sub">Optional — only if both spouses earn</div>
+              </div>
+              <div class="sb">
+                <div class="check-row checked" id="multiJobsCheck">
+                  <div class="cb"></div>
+                  <div class="txt">
+                    <strong>Step 2(c) — Both jobs are similar pay.</strong>
+                    Check this box if there are only two jobs total (yours + spouse's) and both earn similar amounts. Workday adjusts your withholding tables automatically — no estimator math needed.
+                  </div>
+                </div>
+                <div class="helper">Use the <a href="#" style="color: var(--wd-blue);">Multiple Jobs Worksheet</a> instead if pay differs by &gt; 25%, or 3+ jobs total.</div>
+              </div>
+            </div>
+
+            <div class="w4-section">
+              <div class="sh">
+                <div class="step-no amber">3</div>
+                <div class="title">Step 3 — Claim Dependents</div>
+                <div class="sub">$2,000 per qualifying child · $500 per other dependent</div>
+              </div>
+              <div class="sb">
+                <div class="dep-grid">
+                  <div class="head">Dependent Category</div>
+                  <div class="head r">Count</div>
+                  <div class="head r">Credit / each</div>
+                  <div class="head r">Subtotal</div>
+
+                  <div class="lbl">Qualifying children under age 17</div>
+                  <div class="num changed">2</div>
+                  <div class="ro">$2,000</div>
+                  <div class="total">$4,000.00</div>
+
+                  <div class="lbl">Other dependents</div>
+                  <div class="num changed">1</div>
+                  <div class="ro">$500</div>
+                  <div class="total">$500.00</div>
+                </div>
+                <div class="dep-total-row">
+                  <div class="lbl">Total credit (Step 3)</div>
+                  <div class="v">$4,500.00</div>
+                </div>
+                <div class="helper green">Workday will reduce your federal withholding by this amount over the remainder of 2026.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">5</span>
+        Check the <strong>two-job</strong> box (Step 2c), then enter <strong>2</strong> qualifying children and <strong>1</strong> other dependent — $4,500 credit.
+      </div>
+    </div>
+
+    <!-- ============ STEP 6 — W-4 STEP 4 (OTHER ADJUSTMENTS) ============ -->
+    <div class="screen" data-step="6">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Federal Withholding Elections (W-4)</h2>
+              <span class="crumb">› Step 4 — Other Adjustments</span>
+            </div>
+            <div class="actions">
+              <button class="btn-cancel">Back</button>
+              <button class="btn-primary" id="reviewBtn">Review</button>
+            </div>
+          </div>
+          <div class="w4-form">
+            <div class="w4-section">
+              <div class="sh">
+                <div class="step-no amber">4</div>
+                <div class="title">Step 4 — Other Adjustments (optional)</div>
+                <div class="sub">All fields default to $0 — fill only what applies</div>
+              </div>
+              <div class="sb">
+                <div class="field-row three">
+                  <div class="field">
+                    <label>4(a) Other income (no withholding)</label>
+                    <div class="input readonly">$0.00</div>
+                    <div class="helper">Interest, dividends, retirement, gig income</div>
+                  </div>
+                  <div class="field">
+                    <label>4(b) Deductions (above standard)</label>
+                    <div class="input readonly">$0.00</div>
+                    <div class="helper">Itemized over the standard deduction</div>
+                  </div>
+                  <div class="field">
+                    <label>4(c) Extra withholding per pay <span class="req">*</span></label>
+                    <div class="input changed focused" id="extraWh">
+                      $<span class="reveal-new r1" style="--target-w: 6ch;">50.00</span>
+                    </div>
+                    <div class="helper amber">Adds $1,300/yr to federal withholding (26 pay periods)</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="w4-section">
+              <div class="sh">
+                <div class="step-no green">5</div>
+                <div class="title">Step 5 — Sign &amp; Certify</div>
+                <div class="sub">Electronic signature replaces a paper W-4</div>
+              </div>
+              <div class="sb">
+                <div class="check-row checked">
+                  <div class="cb"></div>
+                  <div class="txt">
+                    <strong>Under penalties of perjury,</strong> I declare that this certificate is, to the best of my knowledge and belief, true, correct, and complete. Signed electronically by <strong>Jordan A. Mitchell</strong> on May 15, 2026 at 9:14 AM ET.
+                  </div>
+                </div>
+                <div class="wh-estimate">
+                  <div class="ic">≈</div>
+                  <div>
+                    <div style="font-size: 11px; color: var(--wd-muted); text-transform: uppercase; letter-spacing: 0.4px; font-weight: 700;">New estimated federal withholding</div>
+                    <div style="font-size: 12px; color: var(--wd-text);">Based on $2,953 gross bi-weekly · MFJ · 2 children · 1 other dependent · +$50 extra</div>
+                  </div>
+                  <div class="v">$315.84 <span style="font-size: 11px; font-weight: 500; color: var(--wd-muted);">/ pay</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">6</span>
+        Step 4(c) — add <strong>$50</strong> extra withholding per paycheck for the side-gig safety net. Sign electronically and click <strong>Review</strong>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 7 — REVIEW BEFORE/AFTER & SUBMIT ============ -->
+    <div class="screen" data-step="7">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="page-screen">
+          <div class="pi-toolbar">
+            <div class="crumb-row">
+              <h2>Review &amp; Submit Form W-4</h2>
+              <span class="crumb">› Confirm before submitting</span>
+            </div>
+            <div class="actions">
+              <button class="btn-cancel">Back</button>
+              <button class="btn-primary" id="submitW4Btn">Submit</button>
+            </div>
+          </div>
+          <div class="review-grid">
+            <div class="review-card">
+              <h4>Before → After</h4>
+              <div class="compare-row">
+                <div class="col">
+                  <div class="lbl">Before · per pay</div>
+                  <div class="v">$412.18</div>
+                </div>
+                <div class="col after">
+                  <div class="lbl">After · per pay</div>
+                  <div class="v">$315.84</div>
+                </div>
+              </div>
+              <div class="kv green"><span class="k">Δ per paycheck (take-home up)</span><span class="v">+$96.34</span></div>
+              <div class="kv green"><span class="k">Annualized take-home Δ</span><span class="v">+$2,504.84</span></div>
+              <div class="kv delta"><span class="k">Projected 2026 refund</span><span class="v">≈ $180 (was $2,140)</span></div>
+              <div class="kv"><span class="k">Effective federal rate</span><span class="v">10.8% → 7.9%</span></div>
+              <div class="helper amber" style="margin-top: 4px;">A smaller refund means less is loaned interest-free to the IRS. Verify with the IRS Tax Withholding Estimator if your situation is complex.</div>
+            </div>
+            <div class="review-card">
+              <h4>Form W-4 (2025) — Summary</h4>
+              <div class="kv"><span class="k">Filing Status</span><span class="v" style="color: var(--wd-amber);">Married filing jointly</span></div>
+              <div class="kv"><span class="k">Step 2(c) — Two jobs ✓</span><span class="v">Yes</span></div>
+              <div class="kv"><span class="k">Step 3 — Dependents credit</span><span class="v" style="color: var(--wd-amber);">$4,500.00</span></div>
+              <div class="kv"><span class="k">Step 4(a) — Other income</span><span class="v">$0.00</span></div>
+              <div class="kv"><span class="k">Step 4(b) — Deductions</span><span class="v">$0.00</span></div>
+              <div class="kv"><span class="k">Step 4(c) — Extra withholding</span><span class="v" style="color: var(--wd-amber);">$50.00 / pay</span></div>
+              <div class="kv"><span class="k">Effective Date</span><span class="v">May 29, 2026 (next pay run)</span></div>
+              <div class="auth-note" style="margin-top: 6px;">
+                <div class="pic">!</div>
+                <div>
+                  <strong>State CT-W4 unchanged.</strong>
+                  Federal W-4 doesn't update Connecticut withholding. Update CT-W4 separately if your state filing status changed.
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="toast" id="toastSubmitted"><div class="check">✓</div>W-4 submitted. Effective next pay run.</div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">7</span>
+        Review the before/after — your bi-weekly federal withholding drops $96. Confirm and click <strong>Submit</strong>.
+      </div>
+    </div>
+
+    <!-- ============ STEP 8 — CONFIRMATION ============ -->
+    <div class="screen" data-step="8">
+      <div class="wd-topbar">
+        <div class="menu-icon"><span></span><span></span><span></span></div>
+        <div class="logo">workday.</div>
+        <div class="search">Search</div>
+        <div class="right"><span>Inbox</span><span>Notifications</span><div class="wd-avatar">JM</div></div>
+      </div>
+      <div class="wd-body">
+        <div class="confirm-screen">
+          <div class="check-big">✓</div>
+          <h2>Form W-4 submitted</h2>
+          <p>Workday saved your federal withholding election. Your <strong>May 29</strong> paycheck reflects the new $315.84 federal withholding. A PDF copy of the signed W-4 is in your Worker Documents.</p>
+          <div class="summary-card">
+            <h4>Federal W-4 · Effective May 29, 2026</h4>
+            <div class="summary-row">
+              <div class="desc">Filing status</div>
+              <div class="amt">Married filing jointly</div>
+            </div>
+            <div class="summary-row">
+              <div class="desc">Step 2(c) — Two-jobs box</div>
+              <div class="amt">Checked</div>
+            </div>
+            <div class="summary-row">
+              <div class="desc">Step 3 — Dependents credit</div>
+              <div class="amt">$4,500.00</div>
+            </div>
+            <div class="summary-row">
+              <div class="desc">Step 4(c) — Extra withholding / pay</div>
+              <div class="amt">$50.00</div>
+            </div>
+            <div class="summary-grand">
+              <div>New federal withholding per paycheck</div>
+              <div class="v">$315.84</div>
+            </div>
+          </div>
+          <div class="state-callout">
+            <div class="pic">i</div>
+            <div>Your <strong>Connecticut CT-W4</strong> is still on the old single status. Open Tax Elections → CT-W4 → Update when ready.</div>
+          </div>
+          <div class="approval-line">
+            <div class="dot"></div>
+            Audit logged · Payroll notified · Signed PDF stored under Worker → Documents → Tax Forms
+          </div>
+        </div>
+      </div>
+      <div class="narration"><span class="n">8</span>
+        Federal W-4 done. Don't forget to update <strong>CT-W4</strong> separately — federal and state withholdings are independent forms.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<footer class="page">
+  <p>Tutorial reproduces a typical Workday Worker self-service flow for updating federal Form W-4. Field labels ("Filing Status", "Multiple Jobs or Spouse Works", "Claim Dependents", "Other Adjustments", "Extra Withholding"), the Pay → Tax Elections navigation pattern, and the e-signature certification follow the IRS 2025 W-4 layout and Workday's published task pattern. Specific dollar deltas, the 2025 form revision, and per-pay withholding estimates illustrate the flow — actual values depend on payroll configuration and the IRS withholding tables in effect. State withholding is handled by a separate state-specific form (CT-W4 shown). Sources: IRS Form W-4 (2025) instructions, Workday Community help "Edit Federal Withholding Elections", and university job aids (e.g., Yale, Stanford, UC Workday training pages on Tax Elections).</p>
+</footer>
+
+<script>
+  const screens = Array.from(document.querySelectorAll('.screen'));
+  const TOTAL = screens.length;
+  const stepLabel = document.getElementById('stepLabel');
+  const cursor = document.getElementById('cursor');
+  const playBtn = document.getElementById('playBtn');
+
+  let current = 0;
+  let playing = true;
+  let timer = null;
+  let cursorTimers = [];
+
+  const DURATIONS = [3800, 4200, 4400, 4800, 5200, 5400, 5200, 5400];
+
+  function clearCursorTimers() {
+    cursorTimers.forEach(t => clearTimeout(t));
+    cursorTimers = [];
+  }
+
+  function moveCursorTo(x, y, clickAfter = true) {
+    cursor.style.left = x + 'px';
+    cursor.style.top = y + 'px';
+    if (clickAfter) {
+      const t = setTimeout(() => {
+        cursor.classList.add('click');
+        const t2 = setTimeout(() => cursor.classList.remove('click'), 520);
+        cursorTimers.push(t2);
+      }, 720);
+      cursorTimers.push(t);
+    }
+  }
+
+  function offsetInStage(el) {
+    const stage = document.getElementById('stage');
+    const sr = stage.getBoundingClientRect();
+    const er = el.getBoundingClientRect();
+    return { x: er.left - sr.left + er.width / 2 - 11, y: er.top - sr.top + er.height / 2 - 11 };
+  }
+
+  function showTimedToast(screen, id, delay = 1400) {
+    const toast = screen.querySelector('#' + id);
+    if (!toast) return;
+    const t = setTimeout(() => toast.classList.add('show'), delay);
+    cursorTimers.push(t);
+  }
+
+  function animateStep(i) {
+    clearCursorTimers();
+    cursor.style.left = '-40px';
+    cursor.style.top = '-40px';
+
+    document.querySelectorAll('.toast.show').forEach(t => t.classList.remove('show'));
+
+    const screen = screens[i];
+    const t = setTimeout(() => {
+      switch (i) {
+        case 0: {
+          const el = screen.querySelector('#payTile');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 1: {
+          const el = screen.querySelector('#taxElectionsItem');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 2: {
+          const el = screen.querySelector('#updateFedBtn');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 3: {
+          const el = screen.querySelector('#filingMFJ');
+          if (el) { const p = offsetInStage(el); moveCursorTo(p.x, p.y); }
+          break;
+        }
+        case 4: {
+          const cb = screen.querySelector('#multiJobsCheck');
+          if (cb) { const p = offsetInStage(cb); moveCursorTo(p.x, p.y, false); }
+          const t2 = setTimeout(() => {
+            const num = screen.querySelector('.dep-grid .num.changed');
+            if (num) { const q = offsetInStage(num); moveCursorTo(q.x, q.y, false); }
+          }, 1800);
+          cursorTimers.push(t2);
+          break;
+        }
+        case 5: {
+          const extra = screen.querySelector('#extraWh');
+          if (extra) { const p = offsetInStage(extra); moveCursorTo(p.x, p.y, false); }
+          const t2 = setTimeout(() => {
+            const ok = screen.querySelector('#reviewBtn');
+            if (ok) { const q = offsetInStage(ok); moveCursorTo(q.x, q.y); }
+          }, 2600);
+          cursorTimers.push(t2);
+          break;
+        }
+        case 6: {
+          const ok = screen.querySelector('#submitW4Btn');
+          if (ok) { const p = offsetInStage(ok); moveCursorTo(p.x, p.y); }
+          showTimedToast(screen, 'toastSubmitted', 1900);
+          break;
+        }
+        case 7: {
+          cursor.style.left = '-40px';
+          cursor.style.top = '-40px';
+          break;
+        }
+      }
+    }, 250);
+    cursorTimers.push(t);
+  }
+
+  function showStep(i) {
+    current = ((i % TOTAL) + TOTAL) % TOTAL;
+    screens.forEach((s, idx) => s.classList.toggle('active', idx === current));
+    stepLabel.textContent = `Step ${current + 1} / ${TOTAL}`;
+    animateStep(current);
+  }
+
+  function tick() {
+    if (!playing) return;
+    const dur = DURATIONS[current] || 4000;
+    timer = setTimeout(() => {
+      showStep(current + 1);
+      tick();
+    }, dur);
+  }
+
+  function stopTick() { if (timer) { clearTimeout(timer); timer = null; } }
+
+  function togglePlay() {
+    playing = !playing;
+    playBtn.textContent = playing ? 'Pause' : 'Play';
+    if (playing) tick();
+    else stopTick();
+  }
+
+  document.getElementById('playBtn').addEventListener('click', togglePlay);
+  document.getElementById('restartBtn').addEventListener('click', () => {
+    stopTick(); showStep(0); if (playing) tick();
+  });
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    stopTick(); showStep(current - 1); if (playing) tick();
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    stopTick(); showStep(current + 1); if (playing) tick();
+  });
+
+  showStep(0);
+  tick();
+</script>
+
+</body>
+</html>
